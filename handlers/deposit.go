@@ -69,7 +69,7 @@ func HandleDepositAmount(paymentMethod services.PaymentMethod, depositRepository
 }
 
 func validateAmount(amount uint64) error {
-	for _, a := range []uint64{100, 500, 1000, 2500, 5000, 10000} {
+	for _, a := range []uint64{100, 250, 500, 1000, 2500, 5000, 10000} {
 		if a == amount {
 			return nil
 		}
@@ -82,13 +82,13 @@ func getDepositKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("100₽", "deposit_100"),
+			tg.NewInlineKeyboardButtonData("250₽", "deposit_250"),
 			tg.NewInlineKeyboardButtonData("500₽", "deposit_500"),
-			tg.NewInlineKeyboardButtonData("1000₽", "deposit_1000"),
 		),
 		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("1000₽", "deposit_1000"),
 			tg.NewInlineKeyboardButtonData("2500₽", "deposit_2500"),
 			tg.NewInlineKeyboardButtonData("5000₽", "deposit_5000"),
-			tg.NewInlineKeyboardButtonData("10 000₽", "deposit_10000"),
 		),
 		//TODO: implement me later
 		//tg.NewInlineKeyboardRow(
