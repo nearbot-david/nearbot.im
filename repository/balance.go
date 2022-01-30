@@ -36,6 +36,8 @@ func (repo *BalanceRepository) Persist(entity *models.Balance) error {
 		return nil
 	}
 
+	entity.CreatedAt = time.Now()
+	entity.UpdatedAt = time.Now()
 	insert := repo.db.
 		Insert(repo.table).
 		Rows(*entity).
