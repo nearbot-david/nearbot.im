@@ -132,7 +132,7 @@ func WithdrawCanceled(balance int, amount int, cardNumber string, withdrawalID s
 }
 
 func maskCard(cardNumber string) string {
-	return fmt.Sprintf("%s %s %s %s", cardNumber[:4], "****", "****", cardNumber[len(cardNumber)-4:])
+	return utils.MaskCard(cardNumber)
 }
 
 func WithdrawIncorrectCardNumber() string {

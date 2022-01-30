@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mazanax/moneybot/models"
 	"github.com/mazanax/moneybot/repository"
+	"github.com/mazanax/moneybot/utils"
 	"log"
 	"time"
 )
@@ -92,7 +93,7 @@ func (manager *HistoryManager) UpdateWithdrawal(withdrawal *models.Withdrawal, r
 	}
 
 	historyItem.From = fmt.Sprintf("%d", withdrawal.TelegramID)
-	historyItem.To = withdrawal.Address
+	historyItem.To = utils.MaskCard(withdrawal.Address)
 	historyItem.Status = string(withdrawal.Status)
 	historyItem.Cause = reason
 
