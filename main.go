@@ -78,6 +78,8 @@ func main() {
 		mux.HandleFunc("/", endpoints.IndexEndpoint())
 		mux.HandleFunc("/faq", endpoints.FaqEndpoint())
 		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, depositRepository, balanceManager, historyManager, bot, isDebug()))
+		mux.HandleFunc("/payment-successful", endpoints.PaymentSuccessfulEndpoint())
+		mux.HandleFunc("/payment-failed", endpoints.PaymentFailedEndpoint())
 		if isDebug() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
 		}
