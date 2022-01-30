@@ -20,13 +20,14 @@ func PaymentEndpoint(
 	paymentMethod *services.GatewayPaymentMethod,
 	depositRepository *repository.DepositRepository,
 	balanceManager *services.BalanceManager,
+	historyManager *services.HistoryManager,
 	bot *tg.BotAPI,
 	isDebug bool,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
-			handlePost(paymentMethod, balanceManager, bot)(writer, request)
+			handlePost(paymentMethod, balanceManager, historyManager, bot)(writer, request)
 		case http.MethodGet:
 			handleGet(paymentMethod, depositRepository, isDebug)(writer, request)
 		default:
@@ -39,12 +40,14 @@ func PaymentEndpoint(
 func handlePost(
 	paymentMethod services.PaymentMethod,
 	balanceManager *services.BalanceManager,
+	historyManager *services.HistoryManager,
 	bot *tg.BotAPI,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		deposit, err := paymentMethod.ProcessPayment(request)
 		if err == nil {
 			balanceManager.Increment(deposit.TelegramID, deposit.Amount)
+			historyManager.CreateDeposit(deposit)
 
 			if deposit.MessageID != 0 {
 				paymentLink := paymentMethod.BuildPaymentLink(services.PaymentID(deposit.Slug))

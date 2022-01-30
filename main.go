@@ -76,7 +76,7 @@ func main() {
 	go func() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", endpoints.IndexEndpoint())
-		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, depositRepository, balanceManager, bot, isDebug()))
+		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, depositRepository, balanceManager, historyManager, bot, isDebug()))
 		if isDebug() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
 		}
