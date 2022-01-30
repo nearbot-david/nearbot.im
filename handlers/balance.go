@@ -41,5 +41,8 @@ func getBalanceKeyboard() tg.InlineKeyboardMarkup {
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("История", "history"),
 		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Поддержка", "support"),
+		),
 	)
 }

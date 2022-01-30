@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func HandleUnsupportedMessage() HandlerFunc {
+func HandleSupport() HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		callback := tg.NewCallback(update.CallbackQuery.ID, "")
 		if _, err := bot.Request(callback); err != nil {
@@ -18,8 +18,8 @@ func HandleUnsupportedMessage() HandlerFunc {
 		response := tg.NewEditMessageTextAndMarkup(
 			update.CallbackQuery.From.ID,
 			update.CallbackQuery.Message.MessageID,
-			messages.UnsupportedMessage(),
-			getMenuKeyboard(),
+			messages.Support(),
+			getSupportKeyboard(),
 		)
 		response.ParseMode = tg.ModeHTML
 		if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
@@ -28,13 +28,16 @@ func HandleUnsupportedMessage() HandlerFunc {
 	}
 }
 
-func getMenuKeyboard() tg.InlineKeyboardMarkup {
+func getSupportKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
+			tg.NewInlineKeyboardButtonURL("Часто задаваемые вопросы", "https://textmoney.mznx.dev/faq"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Поддержка", "support"),
+			tg.NewInlineKeyboardButtonURL("Написать нам", "https://t.me/textmoney_support"),
+		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("Вернуться назад", "cancel"),
 		),
 	)
 }

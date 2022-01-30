@@ -76,6 +76,7 @@ func main() {
 	go func() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", endpoints.IndexEndpoint())
+		mux.HandleFunc("/faq", endpoints.FaqEndpoint())
 		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, depositRepository, balanceManager, historyManager, bot, isDebug()))
 		if isDebug() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
@@ -112,6 +113,8 @@ func main() {
 		case update.CallbackQuery != nil:
 			log.Printf("[%s] Callback query %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Data)
 			switch true {
+			case update.CallbackData() == "support":
+				handlers.HandleSupport()(bot, &update)
 			case update.CallbackData() == "cancel":
 				handlers.HandleCancel(balanceManager, stateManager)(bot, &update)
 			case update.CallbackData() == "show_balance":
