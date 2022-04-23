@@ -67,3 +67,24 @@ func (repo *DepositRepository) FindBySlug(slug string) *models.Deposit {
 
 	return &deposit
 }
+
+func (repo *DepositRepository) FindByExternalID(paymentMethod string, externalID string) *models.Deposit {
+	var deposit models.Deposit
+	found, err := repo.db.
+		From(repo.table).
+		Where(goqu.Ex{
+			"payment_method": paymentMethod,
+			"external_id":    externalID,
+		}).
+		ScanStruct(&deposit)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	if !found {
+		return nil
+	}
+
+	return &deposit
+}

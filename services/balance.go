@@ -26,6 +26,7 @@ func (bm *BalanceManager) GetCurrentBalance(telegramID int64) int {
 		balance = &models.Balance{
 			TelegramID: telegramID,
 			Amount:     0,
+			NearAmount: 0,
 			CreatedAt:  time.Time{},
 			UpdatedAt:  time.Time{},
 		}
@@ -36,7 +37,7 @@ func (bm *BalanceManager) GetCurrentBalance(telegramID int64) int {
 		}
 	}
 
-	return int(balance.Amount)
+	return int(balance.NearAmount)
 }
 
 func (bm *BalanceManager) Increment(telegramID int64, amount uint64) {

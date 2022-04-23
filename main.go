@@ -57,12 +57,12 @@ func main() {
 	withdrawalManager := services.NewWithdrawalManager(withdrawalRepository)
 	stateManager := services.NewStateManager(stateRepository)
 	balanceManager := services.NewBalanceManager(balanceRepository, transferRepository)
-	paymentMethod := services.NewGatewayPaymentMethod(
+	paymentMethod := services.NewPaywithnearMethod(
 		os.Getenv("PAYMENT_ENDPOINT"),
+		os.Getenv("PWN_CLIENT_ID"),
+		os.Getenv("PWN_CLIENT_SECRET"),
+		os.Getenv("PWN_HOST"),
 		os.Getenv("PAYMENT_SUCCESS_ENDPOINT"),
-		os.Getenv("GATEWAY_CLIENT_ID"),
-		os.Getenv("GATEWAY_SECRET_KEY"),
-		os.Getenv("GATEWAY_HOST"),
 		depositRepository,
 	)
 
@@ -130,10 +130,6 @@ func main() {
 				handlers.HandleWithdraw(balanceManager, stateManager, withdrawalManager)(bot, &update)
 			case update.CallbackData() == "withdraw_confirm":
 				handlers.HandleWithdrawConfirm(balanceManager, stateManager, withdrawalManager, historyManager)(bot, &update)
-			case update.CallbackData() == "withdraw_cancel":
-				handlers.HandleWithdrawCancel(withdrawalManager)(bot, &update)
-			case update.CallbackData() == "withdraw_cancel_confirm":
-				handlers.HandleWithdrawCancelConfirm(balanceManager, withdrawalManager, historyManager)(bot, &update)
 			case strings.HasPrefix(update.CallbackData(), "deposit_"):
 				amountString := strings.TrimPrefix(update.CallbackData(), "deposit_")
 				amount, _ := strconv.Atoi(amountString)

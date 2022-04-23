@@ -17,7 +17,7 @@ import (
 )
 
 func PaymentEndpoint(
-	paymentMethod *services.GatewayPaymentMethod,
+	paymentMethod services.PaymentMethod,
 	depositRepository *repository.DepositRepository,
 	balanceManager *services.BalanceManager,
 	historyManager *services.HistoryManager,
@@ -29,7 +29,7 @@ func PaymentEndpoint(
 		case http.MethodPost:
 			handlePost(paymentMethod, balanceManager, historyManager, bot)(writer, request)
 		case http.MethodGet:
-			handleGet(paymentMethod, depositRepository, isDebug)(writer, request)
+			handleGet(depositRepository, isDebug)(writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			writer.Write(errorPage())
@@ -66,7 +66,8 @@ func handlePost(
 			if deposit.MessageID != 0 {
 				paymentLink := paymentMethod.BuildPaymentLink(services.PaymentID(deposit.Slug))
 
-				text := messages.DepositAmount(deposit.Amount/100, string(paymentLink), deposit.Slug)
+				// скрываем клавиатуру, но оставляем текст сообщения старый
+				text := messages.DepositAmount(float64(deposit.Amount/100), string(paymentLink), deposit.Slug)
 				hideMarkup := tg.NewEditMessageText(deposit.TelegramID, deposit.MessageID, text)
 				hideMarkup.ParseMode = tg.ModeHTML
 				_, _ = bot.Send(hideMarkup)
@@ -104,7 +105,6 @@ func handlePost(
 }
 
 func handleGet(
-	paymentMethod *services.GatewayPaymentMethod,
 	depositRepository *repository.DepositRepository,
 	isDebug bool,
 ) http.HandlerFunc {
@@ -127,11 +127,10 @@ func handleGet(
 			return
 		}
 
-		amount := deposit.Amount + uint64(math.Floor(float64(deposit.Amount)*config.Fee))
-		form := paymentMethod.GetPaymentForm(txID, amount)
+		//amount := deposit.Amount + uint64(math.Floor(float64(deposit.Amount)*config.Fee))
 
 		writer.WriteHeader(200)
-		writer.Write(paymentPage(txID, uint(deposit.Amount), form, isDebug))
+		writer.Write(paymentPage(txID, uint(deposit.Amount), "", isDebug))
 	}
 }
 

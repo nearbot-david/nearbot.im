@@ -56,7 +56,7 @@ func (repo *BalanceRepository) Persist(entity *models.Balance) error {
 func (repo *BalanceRepository) Increment(telegramID int64, amount uint64) {
 	_, err := repo.db.
 		Update(repo.table).
-		Set(goqu.Record{"amount": goqu.L(fmt.Sprintf("amount + %d", int(amount)))}).
+		Set(goqu.Record{"near_amount": goqu.L(fmt.Sprintf("near_amount + %d", int(amount)))}).
 		Where(goqu.C("telegram_id").Eq(telegramID)).
 		Executor().
 		Exec()
@@ -69,7 +69,7 @@ func (repo *BalanceRepository) Increment(telegramID int64, amount uint64) {
 func (repo *BalanceRepository) Decrement(telegramID int64, amount uint64) {
 	_, err := repo.db.
 		Update(repo.table).
-		Set(goqu.Record{"amount": goqu.L(fmt.Sprintf("amount - %d", int(amount)))}).
+		Set(goqu.Record{"near_amount": goqu.L(fmt.Sprintf("near_amount - %d", int(amount)))}).
 		Where(goqu.C("telegram_id").Eq(telegramID)).
 		Executor().
 		Exec()

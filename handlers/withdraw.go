@@ -8,11 +8,9 @@ import (
 	"github.com/mazanax/moneybot/services"
 	"github.com/mazanax/moneybot/utils"
 	"log"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 func HandleWithdraw(
@@ -29,12 +27,8 @@ func HandleWithdraw(
 
 		activeWithdrawal := withdrawalManager.GetActiveWithdrawal(update.CallbackQuery.From.ID)
 		if activeWithdrawal != nil {
-			msg := messages.WithdrawHasPending(int(activeWithdrawal.Amount/100), activeWithdrawal.Address, activeWithdrawal.Slug)
-			kbd := getActiveWithdrawalKeyboard()
-			if activeWithdrawal.Status == models.WithdrawalStatusProcessing {
-				msg = messages.WithdrawHasProcessing(int(activeWithdrawal.Amount/100), activeWithdrawal.Address, activeWithdrawal.Slug)
-				kbd = getActiveWithdrawalNoCancelKeyboard()
-			}
+			msg := messages.WithdrawHasProcessing(int(activeWithdrawal.Amount), activeWithdrawal.Address, activeWithdrawal.Slug)
+			kbd := getActiveWithdrawalNoCancelKeyboard()
 
 			response := tg.NewEditMessageTextAndMarkup(
 				update.CallbackQuery.From.ID,
@@ -118,8 +112,8 @@ func HandleWithdrawAmount(
 		}
 
 		balance := balanceManager.GetCurrentBalance(update.Message.Chat.ID)
-		amount, err := strconv.Atoi(amountString)
-		if err != nil || amount < config.MinWithdrawAmount/100 || amount > utils.GetMaxWithdrawAmount(balance) {
+		amount, err := strconv.ParseFloat(amountString, 64)
+		if err != nil || amount < utils.GetMinWithdrawAmount() || amount > utils.GetMaxWithdrawAmount(balance) {
 			response := tg.NewMessage(
 				update.Message.Chat.ID,
 				messages.WithdrawIncorrectAmount(balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
@@ -132,14 +126,14 @@ func HandleWithdrawAmount(
 		}
 
 		stateManager.SetState(update.Message.Chat.ID, models.UserStateWithdrawAddress, 0)
-		if err := withdrawalManager.StoreAmount(update.Message.Chat.ID, uint64(amount*100)); err != nil {
+		if err := withdrawalManager.StoreAmount(update.Message.Chat.ID, uint64(amount*1e5)); err != nil {
 			log.Println(err)
 			return
 		}
 
 		response := tg.NewMessage(
 			update.Message.From.ID,
-			messages.WithdrawConfirmAmount(amount, balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
+			messages.WithdrawConfirmAmount(int(amount*1e5), balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
 		)
 		response.ReplyMarkup = getCancelKeyboard()
 		response.ParseMode = tg.ModeHTML
@@ -158,19 +152,6 @@ func HandleWithdrawAddress(
 	withdrawalManager *services.WithdrawalManager,
 ) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
-		go func() {
-			// remove message WITH CARD NUMBER
-			time.Sleep(time.Second)
-			deleteMessage := tg.NewDeleteMessage(update.Message.Chat.ID, update.Message.MessageID)
-			if _, err := bot.Request(deleteMessage); err != nil {
-				log.Println(err)
-			}
-
-			wg.Done()
-		}()
-
 		// remove CANCEL KEYBOARD of previous message
 		prevMessageID := stateManager.GetPreviousBotMessageID(update.Message.Chat.ID)
 		if prevMessageID != 0 {
@@ -185,7 +166,7 @@ func HandleWithdrawAddress(
 			}
 		}
 
-		// process card number
+		// process wallet
 		addressString := strings.TrimSpace(update.Message.Text)
 		addressString = strings.ReplaceAll(addressString, " ", "")
 		if strings.ToLower(addressString) == "отмена" {
@@ -203,11 +184,10 @@ func HandleWithdrawAddress(
 			return
 		}
 
-		cardNumber, err := strconv.Atoi(addressString)
-		if err != nil || !utils.IsCardNumberValid(cardNumber) {
+		if !utils.IsNearWalletValid(addressString) {
 			response := tg.NewMessage(
 				update.Message.From.ID,
-				messages.WithdrawIncorrectCardNumber(),
+				messages.WithdrawIncorrectWithdrawalAddress(),
 			)
 			response.ReplyMarkup = getCancelKeyboard()
 			response.ParseMode = tg.ModeHTML
@@ -231,7 +211,7 @@ func HandleWithdrawAddress(
 
 		balance := balanceManager.GetCurrentBalance(update.Message.Chat.ID)
 		draft := withdrawalManager.GetDraft(update.Message.Chat.ID)
-		if draft == nil || int(draft.Amount) > balance || draft.Amount < config.MinWithdrawAmount || int(draft.Amount/100) > utils.GetMaxWithdrawAmount(balance) {
+		if draft == nil || int(draft.Amount) > balance || float64(draft.Amount)/1e5 < utils.GetMinWithdrawAmount() || float64(draft.Amount)/1e5 > utils.GetMaxWithdrawAmount(balance) {
 			response := tg.NewMessage(
 				update.Message.Chat.ID,
 				messages.WithdrawUnexpectedError(),
@@ -246,15 +226,13 @@ func HandleWithdrawAddress(
 		stateManager.SetState(update.Message.Chat.ID, models.UserStateWithdrawConfirm, 0)
 		response := tg.NewMessage(
 			update.Message.From.ID,
-			messages.WithdrawConfirmFinal(int(draft.Amount/100), addressString, balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
+			messages.WithdrawConfirmFinal(int(draft.Amount), addressString, balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
 		)
 		response.ReplyMarkup = getWithdrawalConfirmKeyboard()
 		response.ParseMode = tg.ModeHTML
 		if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
 			log.Println(err)
 		}
-
-		wg.Wait()
 	}
 }
 
@@ -273,7 +251,7 @@ func HandleWithdrawConfirm(
 
 		balance := balanceManager.GetCurrentBalance(update.CallbackQuery.From.ID)
 		draft := withdrawalManager.GetDraft(update.CallbackQuery.From.ID)
-		if draft == nil || int(draft.Amount) > balance || draft.Amount < config.MinWithdrawAmount || int(draft.Amount/100) > utils.GetMaxWithdrawAmount(balance) {
+		if draft == nil || int(draft.Amount) > balance || float64(draft.Amount)/1e5 < utils.GetMinWithdrawAmount() || float64(draft.Amount)/1e5 > utils.GetMaxWithdrawAmount(balance) {
 			response := tg.NewMessage(
 				update.CallbackQuery.Message.From.ID,
 				messages.WithdrawUnexpectedError(),
@@ -296,111 +274,27 @@ func HandleWithdrawConfirm(
 				log.Println(err)
 			}
 		}
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go utils.Withdraw(draft.Address, draft.Amount, wg)
+
 		stateManager.SetState(update.CallbackQuery.From.ID, models.UserStateIdle, 0)
-		balanceManager.Decrement(update.CallbackQuery.From.ID, draft.Amount+uint64(math.Floor(float64(draft.Amount)*config.Fee)))
+		balanceManager.Decrement(update.CallbackQuery.From.ID, uint64(float64(draft.Amount)*(1+config.Fee)))
 		historyManager.CreateWithdrawal(draft)
 
 		response := tg.NewEditMessageTextAndMarkup(
 			update.CallbackQuery.From.ID,
 			update.CallbackQuery.Message.MessageID,
-			messages.WithdrawCreated(int(draft.Amount/100), draft.Address, draft.Slug),
+			messages.WithdrawCreated(int(draft.Amount), draft.Address, draft.Slug),
 			getActiveWithdrawalKeyboard(),
 		)
 		response.ParseMode = tg.ModeHTML
 		if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
 			log.Println(err)
 		}
-	}
-}
 
-func HandleWithdrawCancel(withdrawalManager *services.WithdrawalManager) HandlerFunc {
-	return func(bot *tg.BotAPI, update *tg.Update) {
-		callback := tg.NewCallback(update.CallbackQuery.ID, "")
-		if _, err := bot.Request(callback); err != nil {
-			log.Println(err)
-			return
-		}
-
-		activeWithdrawal := withdrawalManager.GetActiveWithdrawal(update.CallbackQuery.From.ID)
-		if activeWithdrawal == nil || activeWithdrawal.Status == models.WithdrawalStatusProcessing {
-			response := tg.NewMessage(
-				update.CallbackQuery.Message.From.ID,
-				messages.WithdrawUnexpectedError(),
-			)
-			response.ParseMode = tg.ModeHTML
-			if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
-				log.Println(err)
-			}
-			return
-		}
-
-		response := tg.NewEditMessageTextAndMarkup(
-			update.CallbackQuery.From.ID,
-			update.CallbackQuery.Message.MessageID,
-			messages.WithdrawCancel(int(activeWithdrawal.Amount/100), activeWithdrawal.Address, activeWithdrawal.Slug),
-			getWithdrawalCancelKeyboard(),
-		)
-		response.ParseMode = tg.ModeHTML
-		if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
-			log.Println(err)
-		}
-	}
-}
-
-func HandleWithdrawCancelConfirm(
-	balanceManager *services.BalanceManager,
-	withdrawalManager *services.WithdrawalManager,
-	historyManager *services.HistoryManager,
-) HandlerFunc {
-	return func(bot *tg.BotAPI, update *tg.Update) {
-		callback := tg.NewCallback(update.CallbackQuery.ID, "")
-		if _, err := bot.Request(callback); err != nil {
-			log.Println(err)
-			return
-		}
-
-		activeWithdrawal := withdrawalManager.GetActiveWithdrawal(update.CallbackQuery.From.ID)
-		if activeWithdrawal == nil || activeWithdrawal.Status == models.WithdrawalStatusProcessing {
-			response := tg.NewMessage(
-				update.CallbackQuery.Message.From.ID,
-				messages.WithdrawUnexpectedError(),
-			)
-			response.ParseMode = tg.ModeHTML
-			if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
-				log.Println(err)
-			}
-			return
-		}
-
-		if err := withdrawalManager.CancelWithdraw(activeWithdrawal); err != nil {
-			log.Println(err)
-			response := tg.NewMessage(
-				update.CallbackQuery.From.ID,
-				messages.WithdrawUnexpectedError(),
-			)
-			response.ParseMode = tg.ModeHTML
-			if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
-				log.Println(err)
-			}
-		}
-		balanceManager.Increment(update.CallbackQuery.From.ID, activeWithdrawal.Amount+uint64(math.Floor(float64(activeWithdrawal.Amount)*config.Fee)))
-		historyManager.UpdateWithdrawal(activeWithdrawal, "Canceled by user")
-
-		response := tg.NewEditMessageTextAndMarkup(
-			update.CallbackQuery.From.ID,
-			update.CallbackQuery.Message.MessageID,
-			messages.WithdrawCanceled(
-				balanceManager.GetCurrentBalance(update.CallbackQuery.From.ID),
-				int(activeWithdrawal.Amount/100),
-				activeWithdrawal.Address,
-				activeWithdrawal.Slug,
-			),
-			getActiveWithdrawalNoCancelKeyboard(),
-		)
-		response.ParseMode = tg.ModeHTML
-		if _, err := bot.Send(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
-			log.Println(err)
-		}
+		wg.Wait()
+		withdrawalManager.MarkAsSuccessful(draft)
 	}
 }
 
@@ -413,22 +307,8 @@ func getWithdrawalConfirmKeyboard() tg.InlineKeyboardMarkup {
 	)
 }
 
-func getWithdrawalCancelKeyboard() tg.InlineKeyboardMarkup {
-	return tg.NewInlineKeyboardMarkup(
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Отменить", "withdraw_cancel_confirm"),
-		),
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
-		),
-	)
-}
-
 func getActiveWithdrawalKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
-		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Отменить вывод", "withdraw_cancel"),
-		),
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
 		),

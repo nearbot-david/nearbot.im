@@ -51,7 +51,7 @@ func HandleDepositAmount(paymentMethod services.PaymentMethod, depositRepository
 		response := tg.NewEditMessageTextAndMarkup(
 			update.CallbackQuery.From.ID,
 			update.CallbackQuery.Message.MessageID,
-			messages.DepositAmount(amount, string(paymentLink), string(paymentID)),
+			messages.DepositAmount(float64(amount)/100, string(paymentLink), string(paymentID)),
 			getDepositAmountKeyboard(string(paymentLink)),
 		)
 		response.ParseMode = tg.ModeHTML
@@ -69,7 +69,7 @@ func HandleDepositAmount(paymentMethod services.PaymentMethod, depositRepository
 }
 
 func validateAmount(amount uint64) error {
-	for _, a := range []uint64{100, 250, 500, 1000, 2500, 5000, 10000} {
+	for _, a := range []uint64{10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000} {
 		if a == amount {
 			return nil
 		}
@@ -81,14 +81,19 @@ func validateAmount(amount uint64) error {
 func getDepositKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("100₽", "deposit_100"),
-			tg.NewInlineKeyboardButtonData("250₽", "deposit_250"),
-			tg.NewInlineKeyboardButtonData("500₽", "deposit_500"),
+			tg.NewInlineKeyboardButtonData("0.1 NEAR", "deposit_10"),
+			tg.NewInlineKeyboardButtonData("0.25 NEAR", "deposit_25"),
+			tg.NewInlineKeyboardButtonData("0.5 NEAR", "deposit_50"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("1000₽", "deposit_1000"),
-			tg.NewInlineKeyboardButtonData("2500₽", "deposit_2500"),
-			tg.NewInlineKeyboardButtonData("5000₽", "deposit_5000"),
+			tg.NewInlineKeyboardButtonData("1 NEAR", "deposit_100"),
+			tg.NewInlineKeyboardButtonData("2.5 NEAR", "deposit_250"),
+			tg.NewInlineKeyboardButtonData("5 NEAR", "deposit_500"),
+		),
+		tg.NewInlineKeyboardRow(
+			tg.NewInlineKeyboardButtonData("10 NEAR", "deposit_1000"),
+			tg.NewInlineKeyboardButtonData("25 NEAR", "deposit_2500"),
+			tg.NewInlineKeyboardButtonData("50 NEAR", "deposit_5000"),
 		),
 		//TODO: implement me later
 		//tg.NewInlineKeyboardRow(

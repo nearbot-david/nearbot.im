@@ -4,43 +4,41 @@ import (
 	"fmt"
 	"github.com/mazanax/moneybot/config"
 	"github.com/mazanax/moneybot/utils"
-	"math"
 	"time"
 )
 
 func Welcome(balance int) string {
 	return "<b>Добро пожаловать!</b>\n\n" +
-		"С помощью этого бота вы можете перевести деньги любому пользователю Telegram," +
+		"С помощью этого бота вы можете перевести NEAR любому пользователю Telegram," +
 		" просто отправив сообщение с суммой.\n\n" +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>", float64(balance/100))
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>", utils.DisplayAmount(balance))
 }
 
 func Balance(balance int) string {
-	return "<b>TextMoney</b>\n\n" +
-		"С помощью этого бота вы можете перевести деньги любому пользователю Telegram," +
+	return "<b>TextMoney • NEAR</b>\n\n" +
+		"С помощью этого бота вы можете перевести NEAR любому пользователю Telegram," +
 		" просто отправив сообщение с суммой.\n\n" +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100)) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance)) +
 		fmt.Sprintf("<i>Обновлено: %s</i>", time.Now().Format("2006-01-02 3:04PM"))
 }
 
 func Deposit(balance int) string {
 	return "<b>Пополнение баланса.</b>\n\n" +
 		"Выберите сумму, которую хотите внести на баланс.\n\n" +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100)) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance)) +
 		fmt.Sprintf("<i>Обновлено: %s</i>", time.Now().Format("2006-01-02 3:04PM"))
 }
 
-func DepositAmount(amount uint64, paymentLink string, paymentID string) string {
+func DepositAmount(amount float64, paymentLink string, paymentID string) string {
 	return "<b>Пополнение баланса.</b>\n\n" +
-		fmt.Sprintf("Ваш баланс будет пополнен на <b>%d рублей</b>. Продолжить?\n\n", amount) +
-		fmt.Sprintf("<b>Комиссия:</b> %d₽\n<b>Сумма с учетом комиссии:</b> %d₽\n\n", uint64(math.Floor(float64(amount)*config.Fee)), uint64(math.Floor(float64(amount)+float64(amount)*config.Fee))) +
+		fmt.Sprintf("Ваш баланс будет пополнен на <b>%.5f NEAR</b>. Продолжить?\n\n", amount) +
 		fmt.Sprintf("Ссылка для оплаты: %s\n\n", paymentLink) +
 		fmt.Sprintf("<i>ID платежа: %s</i>", paymentID)
 }
 
 func DepositProcessed(balance int, paymentID string) string {
 	return "<b>Платеж успешно зачислен.</b>\n\n" +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100)) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance)) +
 		fmt.Sprintf("<i>Обновлено: %s</i>\n\n", time.Now().Format("2006-01-02 3:04PM")) +
 		fmt.Sprintf("<i>ID платежа: %s</i>", paymentID)
 }
@@ -48,98 +46,68 @@ func DepositProcessed(balance int, paymentID string) string {
 func Withdraw(balance int) string {
 	return "<b>Вывод денег</b>\n\n" +
 		fmt.Sprintf("Укажите сумму вывода. Обратите внимание, что комиссия составит %.1f%% от суммы вывода.\n\n", config.Fee*100) +
-		fmt.Sprintf("<b>Минимальная сумма:</b> %d₽\n", config.MinWithdrawAmount/100) +
-		fmt.Sprintf("<b>Максимальная сумма:</b> %d₽\n\n", calculateMaxWithdrawAmount(balance)) +
-		"В настоящее время вывод денег доступен только на банковские карты.\n\n" +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100))
+		fmt.Sprintf("<b>Минимальная сумма:</b> %.5f NEAR\n", utils.GetMinWithdrawAmount()) +
+		fmt.Sprintf("<b>Максимальная сумма:</b> %.5f NEAR\n\n", calculateMaxWithdrawAmount(balance)) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance))
 }
 
 func WithdrawLowBalance(balance int) string {
 	return "<b>Вывод недоступен</b>\n\n" +
-		"На вашем балансе недостаточно денег для вывода.\n" +
-		fmt.Sprintf("<b>Минимальная сумма:</b> %d₽\n\n", config.MinWithdrawAmount/100) +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100))
+		"На вашем балансе недостаточно NEAR для вывода.\n" +
+		fmt.Sprintf("<b>Минимальная сумма:</b> %.5f NEAR\n\n", utils.GetMinWithdrawAmount()) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance))
 }
 
 func WithdrawIncorrectAmount(balance int) string {
 	return "<b>Вывод денег</b>\n\n" +
-		"Сумма должна быть целым числом без лишних знаков. Например: 100.\nДля отмены отправьте текст \"отмена\"\n\n" +
-		fmt.Sprintf("<b>Минимальная сумма:</b> %d₽\n", config.MinWithdrawAmount/100) +
-		fmt.Sprintf("<b>Максимальная сумма:</b> %d₽\n\n", calculateMaxWithdrawAmount(balance)) +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100))
+		"Укажите сумму вывода в NEAR. Например 0.2\nДля отмены отправьте текст \"отмена\"\n\n" +
+		fmt.Sprintf("<b>Минимальная сумма:</b> %.5f NEAR\n", utils.GetMinWithdrawAmount()) +
+		fmt.Sprintf("<b>Максимальная сумма:</b> %.5f NEAR\n\n", calculateMaxWithdrawAmount(balance)) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance))
 }
 
 func WithdrawConfirmAmount(amount int, balance int) string {
 	return "<b>Вывод денег</b>\n\n" +
-		fmt.Sprintf("Вы собираетесь вывести <b>%d₽</b>. Пришлите адрес карты, на которую хотите вывести деньги.\n", amount) +
-		fmt.Sprintf("Например: 4200 0000 0000 0000\n\n") +
-		fmt.Sprintf("<b>Комиссия:</b> %d₽\n", int(math.Floor(float64(amount)*config.Fee))) +
-		fmt.Sprintf("С вашего баланса будет списано <b>%d₽</b> (с учетом комиссии)\n\n", amount+int(math.Round(float64(amount)*config.Fee))) +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100))
+		fmt.Sprintf("Вы собираетесь вывести <b>%s NEAR</b>. Пришлите адрес кошелька, на который хотите вывести NEAR.\n", utils.DisplayAmount(amount)) +
+		fmt.Sprintf("Например: textmoneybot.near\n\n") +
+		fmt.Sprintf("<b>Комиссия:</b> %s NEAR\n", utils.DisplayAmount(int(float64(amount)*config.Fee))) +
+		fmt.Sprintf("С вашего баланса будет списано <b>%s NEAR</b> (с учетом комиссии)\n\n", utils.DisplayAmount(int(float64(amount)*(1+config.Fee)))) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance))
 }
 
-func WithdrawConfirmFinal(amount int, cardNumber string, balance int) string {
+func WithdrawConfirmFinal(amount int, wallet string, balance int) string {
 	return "<b>Вывод денег</b>\n\n" +
-		fmt.Sprintf("Вы собираетесь вывести <b>%d₽</b>.\n", amount) +
-		fmt.Sprintf("Номер карты <b>%s</b>.\n\n", maskCard(cardNumber)) +
-		fmt.Sprintf("<b>Комиссия:</b> %d₽\n", int(math.Floor(float64(amount)*config.Fee))) +
-		fmt.Sprintf("Продолжить? С вашего баланса будет списано <b>%d₽</b> (с учетом комиссии)\n\n", amount+int(math.Round(float64(amount)*config.Fee))) +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100))
+		fmt.Sprintf("Вы собираетесь вывести <b>%s NEAR</b>.\n", utils.DisplayAmount(amount)) +
+		fmt.Sprintf("Адрес <b>%s</b>.\n\n", wallet) +
+		fmt.Sprintf("<b>Комиссия:</b> %s NEAR\n", utils.DisplayAmount(int(float64(amount)*config.Fee))) +
+		fmt.Sprintf("Продолжить? С вашего баланса будет списано <b>%s NEAR</b> (с учетом комиссии)\n\n", utils.DisplayAmount(int(float64(amount)*(1+config.Fee)))) +
+		fmt.Sprintf("Текущий баланс: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance))
 }
 
-func WithdrawHasPending(amount int, cardNumber string, withdrawalID string) string {
-	return "<b>Активный вывод денег</b>\n\n" +
-		fmt.Sprintf("Прямо сейчас у вас есть один необработанный запрос на вывод. Чтобы создать новый, отмените текущий или дождитесь окончания обработки. Обычно это занимает (1-2 рабочих дня).\n\n") +
-		fmt.Sprintf("Статус: <b>ожидает обработки</b>\n") +
-		fmt.Sprintf("Сумма вывода: <b>%d₽</b>.\n", amount) +
-		fmt.Sprintf("Номер карты <b>%s</b>.\n\n", maskCard(cardNumber)) +
-		fmt.Sprintf("Комиссия: <b>%d₽</b>\n\n", int(math.Floor(float64(amount)*config.Fee))) +
-		fmt.Sprintf("<i>ID вывода: %s</i>", withdrawalID)
-}
-
-func WithdrawHasProcessing(amount int, cardNumber string, withdrawalID string) string {
-	return "<b>Активный вывод денег</b>\n\n" +
+func WithdrawHasProcessing(amount int, wallet string, withdrawalID string) string {
+	return "<b>Активный вывод</b>\n\n" +
 		fmt.Sprintf("Прямо сейчас у вас есть один запрос на вывод, находящийся в обработке. К сожалению, отменить вывод находящийся в обработке невозможно.\n\n") +
-		fmt.Sprintf("Статус: <b>в обработке</b>\n") +
-		fmt.Sprintf("Сумма вывода: <b>%d₽</b>.\n", amount) +
-		fmt.Sprintf("Номер карты <b>%s</b>.\n\n", maskCard(cardNumber)) +
-		fmt.Sprintf("Комиссия: <b>%d₽</b>\n\n", int(math.Floor(float64(amount)*config.Fee))) +
+		fmt.Sprintf("Статус: <b>ожидает обработки</b>\n") +
+		fmt.Sprintf("Сумма вывода: <b>%s NEAR</b>.\n", utils.DisplayAmount(amount)) +
+		fmt.Sprintf("Адрес <b>%s</b>.\n\n", wallet) +
+		fmt.Sprintf("Комиссия: <b>%s NEAR</b>\n\n", utils.DisplayAmount(int(float64(amount)*config.Fee))) +
 		fmt.Sprintf("<i>ID вывода: %s</i>", withdrawalID)
 }
 
-func WithdrawCreated(amount int, cardNumber string, withdrawalID string) string {
-	return "<b>Запрос на вывод денег создан</b>\n\n" +
-		fmt.Sprintf("Обратите внимание, вы можете создать только один запрос на вывод за раз. Чтобы создать новый, отмените текущий или дождитесь окончания обработки. Обычно это занимает (1-2 рабочих дня).\n\n") +
-		fmt.Sprintf("Сумма вывода: <b>%d₽</b>.\n", amount) +
-		fmt.Sprintf("Номер карты <b>%s</b>.\n\n", maskCard(cardNumber)) +
-		fmt.Sprintf("Комиссия: <b>%d₽</b>\n\n", int(math.Floor(float64(amount)*config.Fee))) +
+func WithdrawCreated(amount int, wallet string, withdrawalID string) string {
+	return "<b>Запрос на вывод создан</b>\n\n" +
+		fmt.Sprintf("Обратите внимание, вы можете создать только один запрос на вывод за раз. Чтобы создать новый, дождитесь окончания обработки. Обычно это занимает (1-2 минуты).\n\n") +
+		fmt.Sprintf("Сумма вывода: <b>%s NEAR</b>.\n", utils.DisplayAmount(amount)) +
+		fmt.Sprintf("Адрес <b>%s</b>.\n\n", wallet) +
+		fmt.Sprintf("Комиссия: <b>%s NEAR</b>\n\n", utils.DisplayAmount(int(float64(amount)*config.Fee))) +
 		fmt.Sprintf("<i>ID вывода: %s</i>", withdrawalID)
 }
 
-func WithdrawCancel(amount int, cardNumber string, withdrawalID string) string {
-	return "<b>Подтвердите отмену</b>\n\n" +
-		fmt.Sprintf("Вы действительно хотите отменить запрос на вывод <b>%d₽</b> на карту <b>%s</b>?\n\n", amount, maskCard(cardNumber)) +
-		fmt.Sprintf("На ваш баланс будет зачислено <b>%d₽</b>.\n\n", amount+int(math.Floor(float64(amount)*config.Fee))) +
-		fmt.Sprintf("<i>ID вывода: %s</i>", withdrawalID)
-}
-
-func WithdrawCanceled(balance int, amount int, cardNumber string, withdrawalID string) string {
-	return "<b>Вывод отменен</b>\n\n" +
-		fmt.Sprintf("Вы отменили запрос на вывод <b>%d₽</b> на карту <b>%s</b>?\n\n", amount, maskCard(cardNumber)) +
-		fmt.Sprintf("На ваш баланс зачислено <b>%d₽</b>.\n\n", amount+int(math.Floor(float64(amount)*config.Fee))) +
-		fmt.Sprintf("Текущий баланс: <b>%.2f₽</b>\n\n", float64(balance/100)) +
-		fmt.Sprintf("<i>ID вывода: %s</i>", withdrawalID)
-}
-
-func maskCard(cardNumber string) string {
-	return utils.MaskCard(cardNumber)
-}
-
-func WithdrawIncorrectCardNumber() string {
-	return "<b>Некорректный номер карты</b>\n\n" +
-		fmt.Sprintf("Похоже, номер карты, который вы прислали некорректен. Пожалуйста, пришлите корректный номер карты.\n") +
-		fmt.Sprintf("Например: 4200 0000 0000 0000\n\n") +
-		fmt.Sprintf("Если вы уверены, что номер корректный, но продолжаете видеть эту ошибку, пожалуйста, обратитесь в службу поддержки.")
+func WithdrawIncorrectWithdrawalAddress() string {
+	return "<b>Некорректный адрес</b>\n\n" +
+		fmt.Sprintf("Похоже, адрес, который вы прислали некорректен. Пожалуйста, пришлите корректный адрес.\n") +
+		fmt.Sprintf("Например: textmoneybot.near\n\n") +
+		fmt.Sprintf("Если вы уверены, что адрес корректный, но продолжаете видеть эту ошибку, пожалуйста, обратитесь в службу поддержки.")
 }
 
 func WithdrawUnexpectedError() string {
@@ -148,25 +116,25 @@ func WithdrawUnexpectedError() string {
 		"Попробуйте создать вывод еще раз или обратитесь в службу поддержки, если видете это сообщение не в первый раз."
 }
 
-func calculateMaxWithdrawAmount(balance int) int {
+func calculateMaxWithdrawAmount(balance int) float64 {
 	return utils.GetMaxWithdrawAmount(balance)
 }
 
 func TransferAccepted(amount uint64, transferID string) string {
 	return "<b>Перевод получен</b>\n\n" +
-		fmt.Sprintf("Получатель принял перевод на сумму <b>%.2f₽</b>\n\n", float64(amount/100)) +
+		fmt.Sprintf("Получатель принял перевод на сумму <b>%s NEAR</b>\n\n", utils.DisplayAmount(int(amount))) +
 		fmt.Sprintf("<i>ID перевода: %s</i>", transferID)
 }
 
 func TransferCanceled(amount uint64, transferID string) string {
 	return "<b>Перевод отменен</b>\n\n" +
-		fmt.Sprintf("Отправитель отменил перевод на сумму <b>%.2f₽</b>\n\n", float64(amount/100)) +
+		fmt.Sprintf("Отправитель отменил перевод на сумму <b>%s NEAR</b>\n\n", utils.DisplayAmount(int(amount))) +
 		fmt.Sprintf("<i>ID перевода: %s</i>", transferID)
 }
 
 func TransferRejected(amount uint64, transferID string) string {
 	return "<b>Перевод отклонен</b>\n\n" +
-		fmt.Sprintf("Получатель отклонил перевод на сумму <b>%.2f₽</b>\n\n", float64(amount/100)) +
+		fmt.Sprintf("Получатель отклонил перевод на сумму <b>%s NEAR</b>\n\n", utils.DisplayAmount(int(amount))) +
 		fmt.Sprintf("<i>ID перевода: %s</i>", transferID)
 }
 
@@ -174,7 +142,7 @@ func Support() string {
 	return "<b>TextMoney • поддержка</b>\n\n" +
 		"Если у вас возник вопрос по работе бота, проверьте раздел Часто задаваемых вопросов или напишите нам.\n\n" +
 		"<b>Обратите внимание:</b> официальный аккаунт поддержки @textmoney_support. Если вам пишут с другого аккаунта - это мошенники.\n\n" +
-		"Служба поддержки <b>не просит</b> перевести деньги и не спрашивает срок действия или CVV-код карты."
+		"Служба поддержки <b>не просит</b> перевести деньги."
 }
 
 func UnsupportedMessage() string {

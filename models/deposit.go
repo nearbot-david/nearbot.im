@@ -20,4 +20,5 @@ type Deposit struct {
 	CreatedAt  time.Time     `db:"created_at" goqu:"defaultifempty"`
 	UpdatedAt  time.Time     `db:"updated_at" goqu:"defaultifempty"`
 	MessageID  int           `db:"message_id" goqu:"defaultifempty"`
+	ExternalID string        `db:"external_id" goqu:"defaultifempty"`
 }

@@ -54,8 +54,14 @@ func (wm *WithdrawalManager) GetActiveWithdrawal(telegramID int64) *models.Withd
 func (wm *WithdrawalManager) ConfirmDraft(draft *models.Withdrawal) error {
 	draft.CreatedAt = time.Now()
 	draft.UpdatedAt = time.Now()
-	draft.Status = models.WithdrawalStatusPending
+	draft.Status = models.WithdrawalStatusProcessing
 	return wm.repository.Persist(draft)
+}
+
+func (wm *WithdrawalManager) MarkAsSuccessful(withdrawal *models.Withdrawal) error {
+	withdrawal.UpdatedAt = time.Now()
+	withdrawal.Status = models.WithdrawalStatusSuccess
+	return wm.repository.Persist(withdrawal)
 }
 
 func (wm *WithdrawalManager) CancelWithdraw(draft *models.Withdrawal) error {

@@ -16,14 +16,14 @@ import (
 func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		amountString := update.InlineQuery.Query
-		amount, err := strconv.Atoi(amountString)
+		amount, err := strconv.ParseFloat(amountString, 64)
 
-		if amountString == "" || err != nil || amount > balanceManager.GetCurrentBalance(update.InlineQuery.From.ID)/100 {
+		if amountString == "" || err != nil || amount <= 0 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.InlineQuery.From.ID) {
 			inlineResponse := utils.CachelessInlineConfig{
 				InlineQueryID:     update.InlineQuery.ID,
 				CacheTime:         0,
 				IsPersonal:        true,
-				SwitchPMText:      fmt.Sprintf("Доступный баланс: %d₽", balanceManager.GetCurrentBalance(update.InlineQuery.From.ID)/100),
+				SwitchPMText:      fmt.Sprintf("Доступный баланс: %s NEAR", utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
 				SwitchPMParameter: "empty_" + utils.RandStringBytes(16),
 			}
 
@@ -56,10 +56,10 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 
 		responseArticle := tg.NewInlineQueryResultArticleHTML(
 			update.InlineQuery.ID,
-			fmt.Sprintf("Перевести %d₽ (баланс: %d₽)", amount, balanceManager.GetCurrentBalance(update.InlineQuery.From.ID)/100),
-			fmt.Sprintf("Пользователь %s переводит <b>%d₽</b>.", strings.Join(fullName, " "), amount),
+			fmt.Sprintf("Перевести %.5f NEAR (баланс: %s NEAR)", amount, utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
+			fmt.Sprintf("Пользователь %s переводит <b>%.5f NEAR</b>.", strings.Join(fullName, " "), amount),
 		)
-		responseArticle.Description = fmt.Sprintf("С вашего баланса будет списана сумма %d₽. В случае отмены перевода деньги вернутся обратно.", amount)
+		responseArticle.Description = fmt.Sprintf("С вашего баланса будет списана сумма\n%.5f NEAR. В случае отмены перевода деньги вернутся обратно.", amount)
 
 		replyMarkup := pleaseWait()
 		responseArticle.ReplyMarkup = &replyMarkup
@@ -85,9 +85,9 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 func HandleTransferSent(balanceManager *services.BalanceManager, historyManager *services.HistoryManager) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		amountString := update.ChosenInlineResult.Query
-		amount, err := strconv.Atoi(amountString)
+		amount, err := strconv.ParseFloat(amountString, 64)
 
-		if amountString == "" || err != nil || amount > balanceManager.GetCurrentBalance(update.ChosenInlineResult.From.ID)/100 {
+		if amountString == "" || err != nil || amount <= 0 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.ChosenInlineResult.From.ID) {
 			log.Println("INVALID AMOUNT")
 			return
 		}
@@ -107,7 +107,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 			}
 		}
 
-		transfer := balanceManager.SendMoney(update.ChosenInlineResult.From.ID, 0, uint64(amount*100), update.ChosenInlineResult.InlineMessageID)
+		transfer := balanceManager.SendMoney(update.ChosenInlineResult.From.ID, 0, uint64(amount*1e5), update.ChosenInlineResult.InlineMessageID)
 		if transfer == nil {
 			log.Println("Cannot create transfer")
 			return
@@ -121,7 +121,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 				InlineMessageID: update.ChosenInlineResult.InlineMessageID,
 				ReplyMarkup:     &replyMarkup,
 			},
-			Text:      fmt.Sprintf("Пользователь %s переводит <b>%d₽</b>.\n\n<i>ID перевода: %s</i>", strings.Join(fullName, " "), amount, transfer.Slug),
+			Text:      fmt.Sprintf("Пользователь %s переводит\n<b>%.5f NEAR</b>.\n\n<i>ID перевода: %s</i>", strings.Join(fullName, " "), amount, transfer.Slug),
 			ParseMode: tg.ModeHTML,
 		}
 

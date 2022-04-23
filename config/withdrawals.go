@@ -1,5 +1,10 @@
 package config
 
+import "os"
+
 const Fee = 0.05
-const MinWithdrawAmount = 10000   // 100 р.
-const MaxWithdrawAmount = 1000000 // 10 000 р.
+const MinWithdrawAmount = 5e4    // 0.5 NEAR
+const MaxWithdrawAmount = 1000e5 // 1000 NEAR
+
+var NearWallet = os.Getenv("NEAR_WALLET")
+var NearNetwork = os.Getenv("NEAR_NETWORK")

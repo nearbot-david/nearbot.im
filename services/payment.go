@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"crypto/md5"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
@@ -159,28 +160,162 @@ func (g *GatewayPaymentMethod) ProcessPayment(request *http.Request) (*models.De
 	return deposit, nil
 }
 
-type CentAppMethod struct {
-	token string
+type PaywithnearMethod struct {
+	clientID                  string
+	clientSecret              string
+	gatewayHost               string
+	paymentEndpoint           string
+	paymentSuccessfulEndpoint string
+	depositRepository         *repository.DepositRepository
 }
 
-func NewCentAppMethod(token string) *CentAppMethod {
-	return &CentAppMethod{
-		token: token,
+func NewPaywithnearMethod(paymentEndpoint string, clientID string, clientSecret string, gatewayHost string, paymentSuccessfulEndpoint string, depositRepository *repository.DepositRepository) *PaywithnearMethod {
+	return &PaywithnearMethod{
+		paymentEndpoint:           paymentEndpoint,
+		clientID:                  clientID,
+		clientSecret:              clientSecret,
+		gatewayHost:               gatewayHost,
+		paymentSuccessfulEndpoint: paymentSuccessfulEndpoint,
+		depositRepository:         depositRepository,
 	}
 }
 
-func (c *CentAppMethod) GetConstraints() PaymentConstraints {
+func (p *PaywithnearMethod) GetConstraints() PaymentConstraints {
 	return PaymentConstraints{MinAmount: 10000, MaxAmount: 1000000}
 }
 
-func (c *CentAppMethod) GeneratePaymentLink(telegramID int64, amount uint64) (PaymentID, PaymentLink) {
-	return "", ""
+func (p *PaywithnearMethod) BuildPaymentLink(paymentID PaymentID) PaymentLink {
+	deposit := p.depositRepository.FindBySlug(string(paymentID))
+	if deposit == nil {
+		log.Printf("Deposit with slug = %s not found", paymentID)
+		return ""
+	}
+
+	return PaymentLink("https://go.paywithnear.com/payment/" + deposit.ExternalID)
 }
 
-func (c *CentAppMethod) ProcessPayment(request *http.Request) (*models.Deposit, error) {
+func (p *PaywithnearMethod) GeneratePaymentLink(telegramID int64, amount uint64) (PaymentID, PaymentLink) {
+	for {
+		paymentID := utils.RandStringBytes(16)
+		if nil != p.depositRepository.FindBySlug(paymentID) {
+			continue
+		}
+
+		externalID, paymentLink := p.retrievePaymentPage(paymentID, amount)
+
+		deposit := &models.Deposit{
+			Slug:       paymentID,
+			TelegramID: telegramID,
+			Method:     "paywithnear",
+			Amount:     amount / 100 * 1e5,
+			Status:     models.PaymentStatusNew,
+			CreatedAt:  time.Now(),
+			ExternalID: externalID,
+		}
+
+		if err := p.depositRepository.Persist(deposit); err != nil {
+			log.Println(err.Error())
+			return "", ""
+		}
+
+		return PaymentID(paymentID), PaymentLink(paymentLink)
+	}
+}
+
+func (p *PaywithnearMethod) retrievePaymentPage(slug string, amount uint64) (string, string) {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"name":       "Пополнение баланса @textmoneybot",
+		"amount":     float64(amount) / 100,
+		"return_url": p.paymentSuccessfulEndpoint + slug,
+	})
+
+	req, err := http.NewRequest("POST", p.gatewayHost+"/payment/"+p.clientID+"/page", bytes.NewReader(payload))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	response, _ := ioutil.ReadAll(resp.Body)
+
+	type FormResponse struct {
+		PaymentID string `json:"paymentID"`
+		URL       string `json:"url"`
+	}
+	formResponse := &FormResponse{}
+	if err := json.Unmarshal(response, formResponse); err != nil {
+		log.Println(err)
+		return "", ""
+	}
+
+	return formResponse.PaymentID, formResponse.URL
+}
+
+func (p *PaywithnearMethod) ProcessPayment(request *http.Request) (*models.Deposit, error) {
+	data, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	type CallbackPayload struct {
+		PaymentID         string `json:"payment_id"`
+		Amount            string `json:"amount"`
+		AmountUsd         string `json:"amount_usd"`
+		ReceivedAmount    string `json:"received_amount"`
+		ReceivedAmountUsd string `json:"received_amount_usd"`
+		CurrentDatetime   string `json:"current_datetime"`
+		Signature         string `json:"signature"`
+	}
+
+	payload := &CallbackPayload{}
+	if err := json.Unmarshal(data, request); err != nil {
+		return nil, err
+	}
+
+	if payload.PaymentID == "" || payload.ReceivedAmount == "" || payload.Signature == "" {
+		log.Printf("Bad request: %s, %d, %s", payload.PaymentID, payload.ReceivedAmount, payload.Signature)
+		return nil, fmt.Errorf("bad request")
+	}
+
+	computedSignatureBytes := sha256.Sum256([]byte(fmt.Sprintf(
+		"Amount=%s;AmountUsd=%s;CurrentDateTime=%s;PaymentID=%s;ReceivedAmount=%s;ReceivedAmountUsd=%s;SecretKey=%s",
+		payload.Amount,
+		payload.AmountUsd,
+		payload.CurrentDatetime,
+		payload.PaymentID,
+		payload.ReceivedAmount,
+		payload.ReceivedAmountUsd,
+		p.clientSecret,
+	)))
+	computedSignature := hex.EncodeToString(computedSignatureBytes[:])
+	if subtle.ConstantTimeCompare([]byte(computedSignature), []byte(payload.Signature)) != 1 {
+		log.Printf("Signatures aren't equal: (computed: %s, request: %s)", hex.EncodeToString(computedSignatureBytes[:]), payload.Signature)
+		return nil, fmt.Errorf("bad request")
+	}
+
+	deposit := p.depositRepository.FindByExternalID("paywithnear", payload.PaymentID)
+	if deposit == nil {
+		log.Printf("Deposit with external_id = %s (%s) not found", payload.PaymentID, "paywithnear")
+		return nil, fmt.Errorf("deposit not found")
+	}
+
+	if deposit.Status == models.PaymentStatusNew {
+		amount, err := strconv.ParseFloat(payload.ReceivedAmount, 64)
+		if err != nil {
+			return nil, err
+		}
+		deposit.Amount = uint64(amount * 1e5)
+		deposit.Status = models.PaymentStatusSuccess
+
+		if err := p.depositRepository.Persist(deposit); err != nil {
+			log.Printf("Cannot persist deposit with slug = %s: %s", payload.PaymentID, err.Error())
+			return nil, fmt.Errorf("cannot persist deposit status")
+		}
+
+		return deposit, nil
+	}
+
 	return nil, nil
-}
-
-func (c *CentAppMethod) BuildPaymentLink(paymentID PaymentID) PaymentLink {
-	return PaymentLink(paymentID)
 }
