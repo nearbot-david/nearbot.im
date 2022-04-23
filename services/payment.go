@@ -258,6 +258,7 @@ func (p *PaywithnearMethod) ProcessPayment(request *http.Request) (*models.Depos
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println(string(data))
 
 	type CallbackPayload struct {
 		PaymentID         string `json:"payment_id"`
@@ -270,12 +271,12 @@ func (p *PaywithnearMethod) ProcessPayment(request *http.Request) (*models.Depos
 	}
 
 	payload := &CallbackPayload{}
-	if err := json.Unmarshal(data, request); err != nil {
+	if err := json.Unmarshal(data, payload); err != nil {
 		return nil, err
 	}
 
 	if payload.PaymentID == "" || payload.ReceivedAmount == "" || payload.Signature == "" {
-		log.Printf("Bad request: %s, %d, %s", payload.PaymentID, payload.ReceivedAmount, payload.Signature)
+		log.Printf("Bad request: %s, %s, %s", payload.PaymentID, payload.ReceivedAmount, payload.Signature)
 		return nil, fmt.Errorf("bad request")
 	}
 

@@ -1,6 +1,7 @@
 package endpoints
 
 import (
+	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/mazanax/moneybot/config"
 	"github.com/mazanax/moneybot/messages"
@@ -99,6 +100,7 @@ func handlePost(
 			return
 		}
 
+		fmt.Println(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write([]byte(err.Error()))
 	}
