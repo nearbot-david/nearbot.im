@@ -31,7 +31,7 @@ func Deposit(balance int) string {
 
 func DepositAmount(amount float64, paymentLink string, paymentID string) string {
 	return "<b>Пополнение баланса.</b>\n\n" +
-		fmt.Sprintf("Ваш баланс будет пополнен на <b>%.5f NEAR</b>. Продолжить?\n\n", amount) +
+		fmt.Sprintf("Ваш баланс будет пополнен на <b>%s NEAR</b>. Продолжить?\n\n", utils.DisplayAmount(int(amount))) +
 		fmt.Sprintf("Ссылка для оплаты: %s\n\n", paymentLink) +
 		fmt.Sprintf("<i>ID платежа: %s</i>", paymentID)
 }

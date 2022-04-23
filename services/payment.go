@@ -207,7 +207,7 @@ func (p *PaywithnearMethod) GeneratePaymentLink(telegramID int64, amount uint64)
 			Slug:       paymentID,
 			TelegramID: telegramID,
 			Method:     "paywithnear",
-			Amount:     amount / 100 * 1e5,
+			Amount:     uint64(float64(amount) / 100 * 1e5),
 			Status:     models.PaymentStatusNew,
 			CreatedAt:  time.Now(),
 			ExternalID: externalID,

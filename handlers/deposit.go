@@ -51,7 +51,7 @@ func HandleDepositAmount(paymentMethod services.PaymentMethod, depositRepository
 		response := tg.NewEditMessageTextAndMarkup(
 			update.CallbackQuery.From.ID,
 			update.CallbackQuery.Message.MessageID,
-			messages.DepositAmount(float64(amount)/100, string(paymentLink), string(paymentID)),
+			messages.DepositAmount(float64(amount)/100*1e5, string(paymentLink), string(paymentID)),
 			getDepositAmountKeyboard(string(paymentLink)),
 		)
 		response.ParseMode = tg.ModeHTML

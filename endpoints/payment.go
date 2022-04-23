@@ -67,7 +67,7 @@ func handlePost(
 				paymentLink := paymentMethod.BuildPaymentLink(services.PaymentID(deposit.Slug))
 
 				// скрываем клавиатуру, но оставляем текст сообщения старый
-				text := messages.DepositAmount(float64(deposit.Amount/100), string(paymentLink), deposit.Slug)
+				text := messages.DepositAmount(float64(deposit.Amount), string(paymentLink), deposit.Slug)
 				hideMarkup := tg.NewEditMessageText(deposit.TelegramID, deposit.MessageID, text)
 				hideMarkup.ParseMode = tg.ModeHTML
 				_, _ = bot.Send(hideMarkup)
