@@ -7,7 +7,7 @@ import (
 
 func HandleHistory() HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
-		callback := tg.NewCallback(update.CallbackQuery.ID, "История пока недоступна, но мы уже работаем над этим")
+		callback := tg.NewCallback(update.CallbackQuery.ID, "History not available right now, but we're working on it!")
 		if _, err := bot.Request(callback); err != nil {
 			log.Println(err)
 			return

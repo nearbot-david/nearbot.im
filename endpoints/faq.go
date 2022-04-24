@@ -23,7 +23,7 @@ func faqPage() []byte {
 
 const faqTemplate = `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -37,29 +37,26 @@ const faqTemplate = `
     <header><h1>FAQ</h1></header>
 
         <section>
-        <p><a href="/">&larr; Вернуться на главную</a></p>
+        <p><a href="/">&larr; Return to homepage</a></p>
 
         <ul>
-            <li><a href="#what-is-it">Для чего этот бот?</a></li>
-            <li><a href="#how-it-works">Как это работает?</a></li>
-            <li><a href="#fees">Какие есть комиссии?</a></li>
-            <li><a href="#withdraws">Как вывести деньги?</a></li>
-            <li><a href="#accept-by-myself">Могу ли я принять свой же перевод?</a></li>
-            <li><a href="#cancel-by-myself">Могу ли я отменить свой перевод?</a></li>
-            <li><a href="#contact-support">Контакты для связи</a></li>
+            <li><a href="#what-is-it">What is it?</a></li>
+            <li><a href="#how-it-works">How it works?</a></li>
+            <li><a href="#fees">Do you have fees?</a></li>
+            <li><a href="#withdraws">How to withdraw NEAR?</a></li>
+            <li><a href="#accept-by-myself">Can I accept my transfer to another user?</a></li>
+            <li><a href="#cancel-by-myself">Can I cancel my transfer to another user?</a></li>
+            <li><a href="#contact-support">Contact</a></li>
         </ul>
 
-        <h4 id="what-is-it">Для чего этот бот?</h4>
-        <p>С помощью Textmoneybot вы можете переводить деньги своим друзьям и знакомым через Telegram.</p>
+        <h4 id="what-is-it">What is it?</h4>
+        <p>This bot makes it possible to send NEAR to any Telegram user even if they don't have NEAR wallet.</p>
         <hr>
 
-        <h4 id="how-it-works">Как это работает?</h4>
-        <p>Все просто: вы пополняете баланс с помощью банковской карты, после чего можете перевести деньги любому
-            пользователю Telegram.</p>
-        <p>Для этого в чате с пользователем напишите @textmoneybot и сумму, которую хотите
-            перевести,
-            если на вашем балансе достаточно денег, вы увидете кнопку, по нажатию на которую будет отправлено сообщение
-            с переводом.</p>
+        <h4 id="how-it-works">How it works?</h4>
+        <p>It's easy: you top up bot balance from you NEAR wallet and then you can send your NEAR to anyone.</p>
+        <p>To do it you need to write @textmoneybot and amount of NEAR you're going to send in chat with user you want to send NEAR to.
+            If you have enough NEAR on your balance you will see button.</p>
         <p style="text-align: center;">
             <video loop muted autoplay class="video">
                 <source src="https://textmoney.mznx.dev/demo.mp4?v4" type="video/mp4"/>
@@ -67,32 +64,27 @@ const faqTemplate = `
         </p>
         <hr>
 
-        <h4 id="fees">Какие есть комиссии?</h4>
-        <p>В данный момент комиссия за пополнение и вывод составляет 5%. Комиссии за перевод отсутствуют.</p>
+        <h4 id="fees">Do you have fees?</h4>
+        <p>At the moment we have only withdrawal fee 5%.</p>
         <hr>
 
-        <h4 id="withdraws">Как вывести деньги?</h4>
-        <p>Чтобы вывести деньги, нажмите в меню кнопку <b>Вывести</b> и следуйте инструкциям. Обычно время обработки
-            запроса на вывод составляет 1-2 рабочих дня.</p>
-        <p><b>Обратите внимание:</b> одновременно может быть только одна заявка на вывод, но вы можете отменить
-            существующую (если она еще ожидает обработки) и создать новую.</p>
+        <h4 id="withdraws">How to withdraw NEAR?</h4>
+        <p>Click button <b>withdraw</b> in the bot menu and follow instructions.</p>
         <hr>
 
-        <h4 id="accept-by-myself">Могу ли я принять свой же перевод?</h4>
-        <p>Нет. Пользователь, создавший перевод не может его же принять.</p>
+        <h4 id="accept-by-myself">Can I accept my transfer to another user?</h4>
+        <p>No, you can't</p>
         <hr>
 
-        <h4 id="cancel-by-myself">Могу ли я отменить свой перевод?</h4>
-        <p>Да. Для этого нажмите на кнопку отклонить. Деньги вернутся на ваш баланс.</p>
-        <p style="text-decoration: line-through;" title="В разработке">Кроме того, вы можете отменить перевод из истории операций. Для этого нажмите на соответствующую кнопку рядом
-            с переводом.</p>
+        <h4 id="cancel-by-myself">Can I cancel my transfer to another user?</h4>
+        <p>Yes. Just click <b>decline</b> under message with transfer and you will get your NEAR back</p>
         <hr>
 
-        <h4 id="contact-support">У меня еще остались вопросы</h4>
-        <p>Если у вас еще остались вопросы, напишите нам в телеграм <a href="https://t.me/textmoney_support">@textmoney_support</a>.</p>
+        <h4 id="contact-support">I still have questions...</h4>
+        <p>If you still have questions, feel free to write us: <a href="https://t.me/textmoney_support">@textmoney_support</a>.</p>
         <hr>
 
-        <p><a href="/">&larr; Вернуться на главную</a></p>
+        <p><a href="/">&larr; Return to homepage</a></p>
     </section>
 </div>
 </body>

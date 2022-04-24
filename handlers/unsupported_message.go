@@ -43,10 +43,10 @@ func HandleUnsupportedMessage() HandlerFunc {
 func getMenuKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Return to menu", "show_balance"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Поддержка", "support"),
+			tg.NewInlineKeyboardButtonData("Support", "support"),
 		),
 	)
 }

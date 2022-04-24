@@ -31,13 +31,13 @@ func HandleSupport() HandlerFunc {
 func getSupportKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonURL("Часто задаваемые вопросы", "https://textmoney.mznx.dev/faq"),
+			tg.NewInlineKeyboardButtonURL("Frequently asked questions", "https://textmoney.mznx.dev/faq"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonURL("Написать нам", "https://t.me/textmoney_support"),
+			tg.NewInlineKeyboardButtonURL("Contact us", "https://t.me/textmoney_support"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться назад", "cancel"),
+			tg.NewInlineKeyboardButtonData("Return to menu", "cancel"),
 		),
 	)
 }

@@ -23,7 +23,7 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 				InlineQueryID:     update.InlineQuery.ID,
 				CacheTime:         0,
 				IsPersonal:        true,
-				SwitchPMText:      fmt.Sprintf("Доступный баланс: %s NEAR", utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
+				SwitchPMText:      fmt.Sprintf("Available balance: %s NEAR", utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
 				SwitchPMParameter: "empty_" + utils.RandStringBytes(16),
 			}
 
@@ -56,10 +56,10 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 
 		responseArticle := tg.NewInlineQueryResultArticleHTML(
 			update.InlineQuery.ID,
-			fmt.Sprintf("Перевести %.5f NEAR (баланс: %s NEAR)", amount, utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
-			fmt.Sprintf("Пользователь %s переводит <b>%.5f NEAR</b>.", strings.Join(fullName, " "), amount),
+			fmt.Sprintf("Send %.5f NEAR (balance: %s NEAR)", amount, utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
+			fmt.Sprintf("User %s sent <b>%.5f NEAR</b>.", strings.Join(fullName, " "), amount),
 		)
-		responseArticle.Description = fmt.Sprintf("С вашего баланса будет списана сумма\n%.5f NEAR. В случае отмены перевода деньги вернутся обратно.", amount)
+		responseArticle.Description = fmt.Sprintf("The amount\n%.5f will be deducted from your balance NEAR. If you cancel this transfer you will get you money back.", amount)
 
 		replyMarkup := pleaseWait()
 		responseArticle.ReplyMarkup = &replyMarkup
@@ -121,7 +121,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 				InlineMessageID: update.ChosenInlineResult.InlineMessageID,
 				ReplyMarkup:     &replyMarkup,
 			},
-			Text:      fmt.Sprintf("Пользователь %s переводит\n<b>%.5f NEAR</b>.\n\n<i>ID перевода: %s</i>", strings.Join(fullName, " "), amount, transfer.Slug),
+			Text:      fmt.Sprintf("User %s sent <b>%.5f NEAR</b>.\n\n<i>Transfer ID: %s</i>", strings.Join(fullName, " "), amount, transfer.Slug),
 			ParseMode: tg.ModeHTML,
 		}
 
@@ -136,7 +136,7 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 		transfer := repository.FindBySlug(slug)
 		if transfer == nil {
 			log.Printf("Cannot find transfer with slug = %s", slug)
-			callback := tg.NewCallback(update.CallbackQuery.ID, fmt.Sprintf("Перевод %s не найден. Если вы уверены, что это ошибка, обратитесь в поддержку.", slug))
+			callback := tg.NewCallback(update.CallbackQuery.ID, fmt.Sprintf("Cannot find transfer %s. If you are sure it is an error, contact support.", slug))
 			callback.ShowAlert = true
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
@@ -147,7 +147,7 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 		}
 
 		if transfer.From == update.CallbackQuery.From.ID {
-			callback := tg.NewCallback(update.CallbackQuery.ID, "Вы не можете принять собственный перевод.")
+			callback := tg.NewCallback(update.CallbackQuery.ID, "You cannot accept your transfer.")
 			callback.ShowAlert = true
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
@@ -163,7 +163,7 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 		if err := repository.Persist(transfer); err != nil {
 			log.Println(err)
 
-			callback := tg.NewCallback(update.CallbackQuery.ID, "Произошла какая-то ошибка. Попробуйте еще раз.")
+			callback := tg.NewCallback(update.CallbackQuery.ID, "Something went wrong. Please try again.")
 			callback.ShowAlert = true
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
@@ -202,7 +202,7 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 		transfer := repository.FindBySlug(slug)
 		if transfer == nil {
 			log.Printf("Cannot find transfer with slug = %s", slug)
-			callback := tg.NewCallback(update.CallbackQuery.ID, fmt.Sprintf("Перевод %s не найден. Если вы уверены, что это ошибка, обратитесь в поддержку.", slug))
+			callback := tg.NewCallback(update.CallbackQuery.ID, fmt.Sprintf("Cannot find transfer %s. If you are sure it is an error, contact support.", slug))
 			callback.ShowAlert = true
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
@@ -259,7 +259,7 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 		if err := repository.Persist(transfer); err != nil {
 			log.Println(err)
 
-			callback := tg.NewCallback(update.CallbackQuery.ID, "Произошла какая-то ошибка. Попробуйте еще раз.")
+			callback := tg.NewCallback(update.CallbackQuery.ID, "Something went wrong. Please try again.")
 			callback.ShowAlert = true
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
@@ -295,8 +295,8 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 func transferKeyboard(transferID string) tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Принять", "transfer_approve_"+transferID),
-			tg.NewInlineKeyboardButtonData("Отклонить", "transfer_reject_"+transferID),
+			tg.NewInlineKeyboardButtonData("Accept", "transfer_approve_"+transferID),
+			tg.NewInlineKeyboardButtonData("Decline", "transfer_reject_"+transferID),
 		),
 	)
 }
@@ -304,7 +304,7 @@ func transferKeyboard(transferID string) tg.InlineKeyboardMarkup {
 func pleaseWait() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Перевод обрабатывается", "no_data"),
+			tg.NewInlineKeyboardButtonData("Processing transfer...", "no_data"),
 		),
 	)
 }
@@ -312,7 +312,7 @@ func pleaseWait() tg.InlineKeyboardMarkup {
 func checkBalanceKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonURL("Посмотреть баланс", "https://t.me/textmoneybot"),
+			tg.NewInlineKeyboardButtonURL("Show balance", "https://t.me/textmoneybot"),
 		),
 	)
 }

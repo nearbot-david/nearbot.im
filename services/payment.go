@@ -224,7 +224,7 @@ func (p *PaywithnearMethod) GeneratePaymentLink(telegramID int64, amount uint64)
 
 func (p *PaywithnearMethod) retrievePaymentPage(slug string, amount uint64) (string, string) {
 	payload, _ := json.Marshal(map[string]interface{}{
-		"name":       "Пополнение баланса @textmoneybot",
+		"name":       "Balance top up @textmoneybot",
 		"amount":     float64(amount) / 100,
 		"return_url": p.paymentSuccessfulEndpoint + slug,
 	})

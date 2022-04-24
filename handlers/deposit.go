@@ -34,7 +34,7 @@ func HandleDeposit(balanceManager *services.BalanceManager) HandlerFunc {
 func HandleDepositAmount(paymentMethod services.PaymentMethod, depositRepository *repository.DepositRepository, amount uint64) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		if err := validateAmount(amount); err != nil {
-			callback := tg.NewCallbackWithAlert(update.CallbackQuery.ID, "Неизвестная сумма!")
+			callback := tg.NewCallbackWithAlert(update.CallbackQuery.ID, "Unknown amount!")
 			if _, err := bot.Request(callback); err != nil {
 				log.Println(err)
 				return
@@ -100,14 +100,14 @@ func getDepositKeyboard() tg.InlineKeyboardMarkup {
 		//	tg.NewInlineKeyboardButtonData("Другая сумма", "deposit_other"),
 		//),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Отменить", "cancel"),
+			tg.NewInlineKeyboardButtonData("Cancel", "cancel"),
 		),
 	)
 }
 
 func getDepositAmountKeyboard(paymentLink string) tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
-		tg.NewInlineKeyboardRow(tg.NewInlineKeyboardButtonURL("Перейти к оплате", paymentLink)),
-		tg.NewInlineKeyboardRow(tg.NewInlineKeyboardButtonData("Отменить", "cancel")),
+		tg.NewInlineKeyboardRow(tg.NewInlineKeyboardButtonURL("Pay with NEAR", paymentLink)),
+		tg.NewInlineKeyboardRow(tg.NewInlineKeyboardButtonData("Cancel", "cancel")),
 	)
 }

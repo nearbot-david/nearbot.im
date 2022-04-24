@@ -11,7 +11,7 @@ import (
 
 func HandleCancel(balanceManager *services.BalanceManager, stateManager *services.StateManager) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
-		callback := tg.NewCallback(update.CallbackQuery.ID, "Действие отменено")
+		callback := tg.NewCallback(update.CallbackQuery.ID, "Action canceled")
 		if _, err := bot.Request(callback); err != nil {
 			log.Println(err)
 			return

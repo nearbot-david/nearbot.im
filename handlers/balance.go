@@ -32,17 +32,17 @@ func HandleBalance(balanceManager *services.BalanceManager) HandlerFunc {
 func getBalanceKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Баланс", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Balance", "show_balance"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Пополнить", "deposit"),
-			tg.NewInlineKeyboardButtonData("Вывести", "withdraw"),
+			tg.NewInlineKeyboardButtonData("Top Up", "deposit"),
+			tg.NewInlineKeyboardButtonData("Withdraw", "withdraw"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("История", "history"),
+			tg.NewInlineKeyboardButtonData("History", "history"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Поддержка", "support"),
+			tg.NewInlineKeyboardButtonData("Support", "support"),
 		),
 	)
 }

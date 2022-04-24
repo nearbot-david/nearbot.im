@@ -37,7 +37,7 @@ const indexTemplate = `
     <header><h1>Textmoneybot</h1></header>
 
     <section style="text-align: center;">
-		<p style="font-style: italic;">Удобный способ перевести деньги любому пользователю Telegram, не покидая мессенджер.</p>
+		<p style="font-style: italic;">The most convenient way to send NEAR to any Telegram user.</p>
 
 		<p>
 			<video loop muted autoplay class="video">
@@ -45,11 +45,9 @@ const indexTemplate = `
             </video>
 		</p>
 
-		<p>Пополняйте баланс с банковской карты, переводите деньги друзьям и знакомым, не выходя из Telegram.</p>
+		<a class="block" href="https://t.me/textmoneybot">Start</a>
 
-		<a class="block" href="https://t.me/textmoneybot">Перейти в бота</a>
-
-		<p><a href="/faq">Часто задаваемые вопросы</a></p>
+		<p><a href="/faq">Frequently asked questions</a></p>
     </section>
 </div>
 </body>

@@ -169,7 +169,7 @@ func HandleWithdrawAddress(
 		// process wallet
 		addressString := strings.TrimSpace(update.Message.Text)
 		addressString = strings.ReplaceAll(addressString, " ", "")
-		if strings.ToLower(addressString) == "отмена" {
+		if strings.ToLower(addressString) == "cancel" {
 			response := tg.NewMessage(
 				update.Message.Chat.ID,
 				messages.Welcome(balanceManager.GetCurrentBalance(update.Message.Chat.ID)),
@@ -301,8 +301,8 @@ func HandleWithdrawConfirm(
 func getWithdrawalConfirmKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Подтвердить", "withdraw_confirm"),
-			tg.NewInlineKeyboardButtonData("Отменить", "cancel"),
+			tg.NewInlineKeyboardButtonData("Confirm", "withdraw_confirm"),
+			tg.NewInlineKeyboardButtonData("Cancel", "cancel"),
 		),
 	)
 }
@@ -310,7 +310,7 @@ func getWithdrawalConfirmKeyboard() tg.InlineKeyboardMarkup {
 func getActiveWithdrawalKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Return to menu", "show_balance"),
 		),
 	)
 }
@@ -318,7 +318,7 @@ func getActiveWithdrawalKeyboard() tg.InlineKeyboardMarkup {
 func getActiveWithdrawalNoCancelKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Вернуться в меню", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Return to menu", "show_balance"),
 		),
 	)
 }
@@ -326,7 +326,7 @@ func getActiveWithdrawalNoCancelKeyboard() tg.InlineKeyboardMarkup {
 func getCancelKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Отменить", "cancel"),
+			tg.NewInlineKeyboardButtonData("Cancel", "cancel"),
 		),
 	)
 }

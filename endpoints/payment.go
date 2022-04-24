@@ -3,34 +3,24 @@ package endpoints
 import (
 	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/mazanax/moneybot/config"
 	"github.com/mazanax/moneybot/messages"
-	"github.com/mazanax/moneybot/models"
-	"github.com/mazanax/moneybot/repository"
 	"github.com/mazanax/moneybot/services"
 	"github.com/mazanax/moneybot/utils"
-	"html/template"
-	"math"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 )
 
 func PaymentEndpoint(
 	paymentMethod services.PaymentMethod,
-	depositRepository *repository.DepositRepository,
 	balanceManager *services.BalanceManager,
 	historyManager *services.HistoryManager,
 	bot *tg.BotAPI,
-	isDebug bool,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
 			handlePost(paymentMethod, balanceManager, historyManager, bot)(writer, request)
-		case http.MethodGet:
-			handleGet(depositRepository, isDebug)(writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			writer.Write(errorPage())
@@ -106,74 +96,6 @@ func handlePost(
 	}
 }
 
-func handleGet(
-	depositRepository *repository.DepositRepository,
-	isDebug bool,
-) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
-		txID := request.URL.Path[len("/payment/"):]
-		if txID == "" {
-			writer.WriteHeader(http.StatusBadRequest)
-			writer.Write(errorPage())
-			return
-		}
-
-		deposit := depositRepository.FindBySlug(txID)
-		if deposit == nil {
-			writer.WriteHeader(http.StatusNotFound)
-			writer.Write(errorPage())
-			return
-		}
-		if deposit.Status != models.PaymentStatusNew {
-			writer.Write(paymentCompletedPage(deposit.Slug, uint(deposit.Amount), deposit.UpdatedAt))
-			return
-		}
-
-		//amount := deposit.Amount + uint64(math.Floor(float64(deposit.Amount)*config.Fee))
-
-		writer.WriteHeader(200)
-		writer.Write(paymentPage(txID, uint(deposit.Amount), "", isDebug))
-	}
-}
-
-func paymentPage(txID string, amount uint, form string, isDebug bool) []byte {
-	data := struct {
-		TxID          string
-		Amount        string
-		Fee           string
-		AmountWithFee string
-		Form          template.HTML
-		Debug         bool
-	}{
-		TxID:          txID,
-		Amount:        strconv.Itoa(int(amount / 100)),
-		Fee:           strconv.Itoa(int(math.Floor(float64(amount)*config.Fee) / 100)),
-		AmountWithFee: strconv.Itoa(int(amount/100) + int(math.Floor(float64(amount)*config.Fee)/100)),
-		Form:          template.HTML(form),
-		Debug:         isDebug,
-	}
-
-	return utils.RenderTemplate(paymentTemplate, data)
-}
-
-func paymentCompletedPage(txID string, amount uint, updatedAt time.Time) []byte {
-	data := struct {
-		TxID          string
-		Amount        string
-		Fee           string
-		AmountWithFee string
-		UpdatedAt     string
-	}{
-		TxID:          txID,
-		Amount:        strconv.Itoa(int(amount / 100)),
-		Fee:           strconv.Itoa(int(math.Floor(float64(amount)*config.Fee) / 100)),
-		AmountWithFee: strconv.Itoa(int(amount/100) + int(math.Floor(float64(amount)*config.Fee)/100)),
-		UpdatedAt:     updatedAt.Format("2006-01-02 3:04PM"),
-	}
-
-	return utils.RenderTemplate(paymentCompletedTemplate, data)
-}
-
 func errorPage() []byte {
 	return utils.RenderTemplate(errorTemplate, "")
 }
@@ -189,109 +111,38 @@ func paymentFailedPage() []byte {
 func getBalanceKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Баланс", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Balance", "show_balance"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("Пополнить", "deposit"),
-			tg.NewInlineKeyboardButtonData("Вывести", "withdraw"),
+			tg.NewInlineKeyboardButtonData("Top up", "deposit"),
+			tg.NewInlineKeyboardButtonData("Withdraw", "withdraw"),
 		),
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonData("История", "history"),
+			tg.NewInlineKeyboardButtonData("History", "history"),
 		),
 	)
 }
 
-const paymentTemplate = `
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Пополнение баланса &bull; @textmoneybot</title>
-    <style>
-		body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
-	</style>
-</head>
-<body>
-<div class="wrapper">
-    <header><h1>Пополнение баланса &bull; @textmoneybot</h1></header>
-
-    <section>
-        <p>Вам выставлен счет на оплату.</p>
-        <p>
-            <b>Номер счета:</b> {{ .TxID }}<br>
-			<b>Сумма:</b> {{ .Amount }}&#8381;<br>
-			<b>Комиссия:</b> {{ .Fee }}&#8381;<br>
-			<b>Сумма с учетом комиссии:</b> {{ .AmountWithFee }}&#8381;<br><br>
-
-            <b>Способ оплаты:</b> Банковская карта
-        </p>
-
-		{{ if .Debug }}
-			<a class="block" href="/emulator/{{ .TxID }}" title="Используется эмулятор">Оплатить (E)</a>
-
-			<p style="text-align: center;"><small>Бот запущен в демо-режиме. Оплата будет проведена через эмулятор.</small></p>
-		{{ else }}
-        	{{ .Form }}
-		{{ end }}
-    </section>
-</div>
-</body>
-</html>`
-
-const paymentCompletedTemplate = `
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Баланс пополнен &bull; @textmoneybot</title>
-    <style>
-		body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
-	</style>
-</head>
-<body>
-<div class="wrapper">
-    <header><h1>Баланс пополнен &bull; @textmoneybot</h1></header>
-
-    <section>
-        <p>Счет успешно оплачен. Деньги зачислены на ваш баланс.</p>
-        <p>
-            <b>Номер счета:</b> {{ .TxID }}<br>
-			<b>Сумма:</b> {{ .Amount }}&#8381;<br>
-			<b>Комиссия:</b> {{ .Fee }}&#8381;<br>
-			<b>Сумма с учетом комиссии:</b> {{ .AmountWithFee }}&#8381;<br><br>
-
-            <b>Способ оплаты:</b> Банковская карта<br>
-			<b>Дата и время:</b> {{ .UpdatedAt }}
-        </p>
-
-		<a class="block" href="https://t.me/textmoneybot">Вернуться в бота</a>
-    </section>
-</div>
-</body>
-</html>`
-
 const errorTemplate = `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ошибка &bull; @textmoneybot</title>
+    <title>Something wrong &bull; @textmoneybot</title>
     <style>
 		body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
 	</style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Ошибка &bull; @textmoneybot</h1></header>
+    <header><h1>Error &bull; @textmoneybot</h1></header>
 
     <section>
-        <p>При выполнении запроса произошла ошибка. Пожалуйста, убедитесь, что вы перешли по правильной ссылке.</p>
-		<p>Если ошибка повторяется, рекомендуем обратиться в поддержку.</p>
+        <p>There was an error while making this request. Please make sure you followed the correct link.</p>
+		<p>If the error repeats, we recommend contacting support.</p>
 
-		<a class="block" href="https://t.me/textmoneybot">Вернуться в бота</a>
+		<a class="block" href="https://t.me/textmoneybot">Return to bot</a>
     </section>
 </div>
 </body>
@@ -299,26 +150,26 @@ const errorTemplate = `
 
 const paymentSuccessfulTemplate = `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Оплата успешна &bull; @textmoneybot</title>
+    <title>Successful payment &bull; @textmoneybot</title>
     <style>
         body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Оплата успешна &bull; @textmoneybot</h1></header>
+    <header><h1>Successful payment &bull; @textmoneybot</h1></header>
     <section>
-        <p>Оплата прошла успешна.</p>
+        <p>Successful payment.</p>
 
-        <p>Вы получите уведомление, когда деньги будут зачислены на счет.</p>
+        <p>You will get message from bot when NEAR will be added to your balance.</p>
 
-        <p>Обычно это происходит в течение 1-2 минут.</p>
+        <p>Usually it takes 1-2 minutes.</p>
 
-        <a class="block" href="https://t.me/textmoneybot">Вернуться в бота</a>
+        <a class="block" href="https://t.me/textmoneybot">Return to bot</a>
     </section>
 </div>
 </body>
@@ -326,24 +177,24 @@ const paymentSuccessfulTemplate = `
 
 const paymentFailedTemplate = `
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Ошибка оплаты &bull; @textmoneybot</title>
+    <title>Payment failed &bull; @textmoneybot</title>
     <style>
         body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Ошибка оплаты &bull; @textmoneybot</h1></header>
+    <header><h1>Payment failed &bull; @textmoneybot</h1></header>
     <section>
-        <p>При оплате произошла ошибка.</p>
+        <p>Payment failed.</p>
 
-        <p>Вернитесь в бота и попробуйте еще раз.</p>
+        <p>Please return to bot and try again.</p>
 
-        <a class="block" href="https://t.me/textmoneybot">Вернуться в бота</a>
+        <a class="block" href="https://t.me/textmoneybot">Return to bot</a>
     </section>
 </div>
 </body>
