@@ -59,7 +59,7 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 			fmt.Sprintf("Send %.5f NEAR (balance: %s NEAR)", amount, utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
 			fmt.Sprintf("User %s sent <b>%.5f NEAR</b>.", strings.Join(fullName, " "), amount),
 		)
-		responseArticle.Description = fmt.Sprintf("The amount\n%.5f will be deducted from your balance NEAR. If you cancel this transfer you will get you money back.", amount)
+		responseArticle.Description = fmt.Sprintf("The amount %.5f NEAR\n will be deducted from your balance NEAR. If you cancel this transfer you will get you money back.", amount)
 
 		replyMarkup := pleaseWait()
 		responseArticle.ReplyMarkup = &replyMarkup
