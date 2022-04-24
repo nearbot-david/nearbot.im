@@ -93,72 +93,74 @@ func main() {
 	}()
 
 	for update := range updates {
-		switch true {
-		case update.Message != nil && update.Message.Command() != "":
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-
-			switch update.Message.Command() {
-			case "start":
-				handlers.HandleStart(balanceManager)(bot, &update)
-			default:
-				// unknown command
-			}
-		case update.Message != nil:
-			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			switch stateManager.GetState(update.Message.From.ID) {
-			case models.UserStateWithdrawAmount:
-				handlers.HandleWithdrawAmount(balanceManager, stateManager, withdrawalManager)(bot, &update)
-			case models.UserStateWithdrawAddress:
-				handlers.HandleWithdrawAddress(balanceManager, stateManager, withdrawalManager)(bot, &update)
-			default:
-				if update.Message != nil && len(update.Message.NewChatMembers) > 0 {
-					continue
-				}
-				if update.Message.ViaBot != nil &&
-					update.Message.ViaBot.UserName == bot.Self.UserName &&
-					update.Message.ReplyToMessage != nil {
-					handlers.HandleTransferReceiver(transferRepository)(bot, &update)
-					continue
-				}
-				handlers.HandleUnsupportedMessage()(bot, &update)
-			}
-		case update.CallbackQuery != nil:
-			log.Printf("[%s] Callback query %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Data)
+		go func(update tg.Update) {
 			switch true {
-			case update.CallbackData() == "support":
-				handlers.HandleSupport()(bot, &update)
-			case update.CallbackData() == "cancel":
-				handlers.HandleCancel(balanceManager, stateManager)(bot, &update)
-			case update.CallbackData() == "show_balance":
-				handlers.HandleBalance(balanceManager)(bot, &update)
-			case update.CallbackData() == "history":
-				handlers.HandleHistory()(bot, &update)
-			case update.CallbackData() == "deposit":
-				handlers.HandleDeposit(balanceManager)(bot, &update)
-			case update.CallbackData() == "withdraw":
-				handlers.HandleWithdraw(balanceManager, stateManager, withdrawalManager)(bot, &update)
-			case update.CallbackData() == "withdraw_confirm":
-				handlers.HandleWithdrawConfirm(balanceManager, stateManager, withdrawalManager, historyManager)(bot, &update)
-			case strings.HasPrefix(update.CallbackData(), "deposit_"):
-				amountString := strings.TrimPrefix(update.CallbackData(), "deposit_")
-				amount, _ := strconv.Atoi(amountString)
+			case update.Message != nil && update.Message.Command() != "":
+				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-				handlers.HandleDepositAmount(paymentMethod, depositRepository, uint64(amount))(bot, &update)
-			case strings.HasPrefix(update.CallbackData(), "transfer_approve_"):
-				transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_approve_")
+				switch update.Message.Command() {
+				case "start":
+					handlers.HandleStart(balanceManager)(bot, &update)
+				default:
+					// unknown command
+				}
+			case update.Message != nil:
+				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
+				switch stateManager.GetState(update.Message.From.ID) {
+				case models.UserStateWithdrawAmount:
+					handlers.HandleWithdrawAmount(balanceManager, stateManager, withdrawalManager)(bot, &update)
+				case models.UserStateWithdrawAddress:
+					handlers.HandleWithdrawAddress(balanceManager, stateManager, withdrawalManager)(bot, &update)
+				default:
+					if update.Message != nil && len(update.Message.NewChatMembers) > 0 {
+						return
+					}
+					if update.Message.ViaBot != nil &&
+						update.Message.ViaBot.UserName == bot.Self.UserName &&
+						update.Message.ReplyToMessage != nil {
+						handlers.HandleTransferReceiver(transferRepository)(bot, &update)
+						return
+					}
+					handlers.HandleUnsupportedMessage()(bot, &update)
+				}
+			case update.CallbackQuery != nil:
+				log.Printf("[%s] Callback query %s", update.CallbackQuery.From.UserName, update.CallbackQuery.Data)
+				switch true {
+				case update.CallbackData() == "support":
+					handlers.HandleSupport()(bot, &update)
+				case update.CallbackData() == "cancel":
+					handlers.HandleCancel(balanceManager, stateManager)(bot, &update)
+				case update.CallbackData() == "show_balance":
+					handlers.HandleBalance(balanceManager)(bot, &update)
+				case update.CallbackData() == "history":
+					handlers.HandleHistory()(bot, &update)
+				case update.CallbackData() == "deposit":
+					handlers.HandleDeposit(balanceManager)(bot, &update)
+				case update.CallbackData() == "withdraw":
+					handlers.HandleWithdraw(balanceManager, stateManager, withdrawalManager)(bot, &update)
+				case update.CallbackData() == "withdraw_confirm":
+					handlers.HandleWithdrawConfirm(balanceManager, stateManager, withdrawalManager, historyManager)(bot, &update)
+				case strings.HasPrefix(update.CallbackData(), "deposit_"):
+					amountString := strings.TrimPrefix(update.CallbackData(), "deposit_")
+					amount, _ := strconv.Atoi(amountString)
 
-				handlers.HandleTransferApprove(balanceManager, transferRepository, transferSlug, historyManager)(bot, &update)
-			case strings.HasPrefix(update.CallbackData(), "transfer_reject_"):
-				transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_reject_")
+					handlers.HandleDepositAmount(paymentMethod, depositRepository, uint64(amount))(bot, &update)
+				case strings.HasPrefix(update.CallbackData(), "transfer_approve_"):
+					transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_approve_")
 
-				handlers.HandleTransferReject(balanceManager, transferRepository, transferSlug, historyManager)(bot, &update)
+					handlers.HandleTransferApprove(balanceManager, transferRepository, transferSlug, historyManager)(bot, &update)
+				case strings.HasPrefix(update.CallbackData(), "transfer_reject_"):
+					transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_reject_")
+
+					handlers.HandleTransferReject(balanceManager, transferRepository, transferSlug, historyManager)(bot, &update)
+				}
+			case update.InlineQuery != nil:
+				handlers.HandleTransfer(balanceManager)(bot, &update)
+			case update.ChosenInlineResult != nil:
+				handlers.HandleTransferSent(balanceManager, historyManager, transferRepository)(bot, &update)
+			default:
+				return
 			}
-		case update.InlineQuery != nil:
-			handlers.HandleTransfer(balanceManager)(bot, &update)
-		case update.ChosenInlineResult != nil:
-			handlers.HandleTransferSent(balanceManager, historyManager)(bot, &update)
-		default:
-			continue
-		}
+		}(update)
 	}
 }

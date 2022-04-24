@@ -11,6 +11,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
@@ -82,7 +83,7 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 	}
 }
 
-func HandleTransferSent(balanceManager *services.BalanceManager, historyManager *services.HistoryManager) HandlerFunc {
+func HandleTransferSent(balanceManager *services.BalanceManager, historyManager *services.HistoryManager, repository *repository.TransferRepository) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		amountString := update.ChosenInlineResult.Query
 		amount, err := strconv.ParseFloat(amountString, 64)
@@ -113,6 +114,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 			return
 		}
 		historyManager.CreateTransfer(transfer)
+		time.Sleep(3 * time.Second)
 
 		replyMarkup := transferKeyboard(transfer.Slug)
 		updateMessage := tg.EditMessageTextConfig{
@@ -210,6 +212,7 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 func HandleTransferReject(balanceManager *services.BalanceManager, repository *repository.TransferRepository, slug string, historyManager *services.HistoryManager) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		transfer := repository.FindBySlug(slug)
+		fmt.Printf("%+v", transfer)
 		if transfer == nil {
 			log.Printf("Cannot find transfer with slug = %s", slug)
 			callback := tg.NewCallback(update.CallbackQuery.ID, fmt.Sprintf("Cannot find transfer %s. If you are sure it is an error, contact support.", slug))
@@ -314,10 +317,22 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 
 func HandleTransferReceiver(repository *repository.TransferRepository) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
-		transfer := repository.GetLastTransfer(update.Message.From.ID)
+		var transfer *models.Transfer
+		for {
+			transfer = repository.GetLastTransfer(update.Message.From.ID)
+			if transfer == nil {
+				time.Sleep(time.Second / 3)
+				continue
+			}
+			break
+		}
+
 		if transfer != nil {
 			transfer.To = update.Message.ReplyToMessage.From.ID
-			repository.Persist(transfer)
+			err := repository.Persist(transfer)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 }

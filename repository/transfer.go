@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/mazanax/moneybot/models"
 	"log"
@@ -20,6 +21,7 @@ func NewTransferRepository(db *goqu.Database) *TransferRepository {
 }
 
 func (repo *TransferRepository) Persist(entity *models.Transfer) error {
+	fmt.Printf("%+v\n", entity)
 	if entity.ID != 0 {
 		entity.UpdatedAt = time.Now()
 		update := repo.db.
@@ -73,8 +75,9 @@ func (repo *TransferRepository) GetLastTransfer(from int64) *models.Transfer {
 	found, err := repo.db.
 		From(repo.table).
 		Where(goqu.Ex{
-			"from":   from,
-			"status": models.TransferStatusPending,
+			"from":       from,
+			"status":     models.TransferStatusPending,
+			"created_at": goqu.Op{"gte": time.Now().Add(-5 * time.Second)},
 		}).
 		Order(goqu.I("created_at").Desc()).
 		Limit(1).
