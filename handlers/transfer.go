@@ -114,7 +114,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 			return
 		}
 		historyManager.CreateTransfer(transfer)
-		time.Sleep(3 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		replyMarkup := transferKeyboard(transfer.Slug)
 		updateMessage := tg.EditMessageTextConfig{
