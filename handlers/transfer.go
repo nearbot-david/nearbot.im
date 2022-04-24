@@ -19,7 +19,7 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 		amountString := update.InlineQuery.Query
 		amount, err := strconv.ParseFloat(amountString, 64)
 
-		if amountString == "" || err != nil || amount <= 0 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.InlineQuery.From.ID) {
+		if amountString == "" || err != nil || amount < 0.00001 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.InlineQuery.From.ID) {
 			inlineResponse := utils.CachelessInlineConfig{
 				InlineQueryID:     update.InlineQuery.ID,
 				CacheTime:         0,
@@ -88,7 +88,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 		amountString := update.ChosenInlineResult.Query
 		amount, err := strconv.ParseFloat(amountString, 64)
 
-		if amountString == "" || err != nil || amount <= 0 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.ChosenInlineResult.From.ID) {
+		if amountString == "" || err != nil || amount < 0.00001 || int(amount*1e5) > balanceManager.GetCurrentBalance(update.ChosenInlineResult.From.ID) {
 			log.Println("INVALID AMOUNT")
 			return
 		}
