@@ -111,6 +111,15 @@ func main() {
 			case models.UserStateWithdrawAddress:
 				handlers.HandleWithdrawAddress(balanceManager, stateManager, withdrawalManager)(bot, &update)
 			default:
+				if update.Message != nil && len(update.Message.NewChatMembers) > 0 {
+					continue
+				}
+				if update.Message.ViaBot != nil &&
+					update.Message.ViaBot.UserName == bot.Self.UserName &&
+					update.Message.ReplyToMessage != nil {
+					handlers.HandleTransferReceiver(transferRepository)(bot, &update)
+					continue
+				}
 				handlers.HandleUnsupportedMessage()(bot, &update)
 			}
 		case update.CallbackQuery != nil:

@@ -156,6 +156,16 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 			return
 		}
 
+		if transfer.To != 0 && transfer.To != update.CallbackQuery.From.ID {
+			callback := tg.NewCallback(update.CallbackQuery.ID, "Only receiver could accept this transfer.")
+			callback.ShowAlert = true
+			if _, err := bot.Request(callback); err != nil {
+				log.Println(err)
+				return
+			}
+			return
+		}
+
 		balanceManager.GetCurrentBalance(update.CallbackQuery.From.ID) // create user balance entity
 		balanceManager.Increment(update.CallbackQuery.From.ID, transfer.Amount)
 		transfer.To = update.CallbackQuery.From.ID
@@ -219,7 +229,7 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 			if err := repository.Persist(transfer); err != nil {
 				log.Println(err)
 
-				callback := tg.NewCallback(update.CallbackQuery.ID, "Произошла какая-то ошибка. Попробуйте еще раз.")
+				callback := tg.NewCallback(update.CallbackQuery.ID, "Something went wrong. Please try again.")
 				callback.ShowAlert = true
 				if _, err := bot.Request(callback); err != nil {
 					log.Println(err)
@@ -248,6 +258,16 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 
 			if _, err := bot.Request(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
 				log.Println(err)
+			}
+			return
+		}
+
+		if transfer.To != 0 && transfer.To != update.CallbackQuery.From.ID {
+			callback := tg.NewCallback(update.CallbackQuery.ID, "Only sender or receiver could cancel transfer.")
+			callback.ShowAlert = true
+			if _, err := bot.Request(callback); err != nil {
+				log.Println(err)
+				return
 			}
 			return
 		}
@@ -288,6 +308,16 @@ func HandleTransferReject(balanceManager *services.BalanceManager, repository *r
 
 		if _, err := bot.Request(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
 			log.Println(err)
+		}
+	}
+}
+
+func HandleTransferReceiver(repository *repository.TransferRepository) HandlerFunc {
+	return func(bot *tg.BotAPI, update *tg.Update) {
+		transfer := repository.GetLastTransfer(update.Message.From.ID)
+		if transfer != nil {
+			transfer.To = update.Message.ReplyToMessage.From.ID
+			repository.Persist(transfer)
 		}
 	}
 }

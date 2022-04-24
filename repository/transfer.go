@@ -67,3 +67,26 @@ func (repo *TransferRepository) FindBySlug(slug string) *models.Transfer {
 
 	return &entity
 }
+
+func (repo *TransferRepository) GetLastTransfer(from int64) *models.Transfer {
+	var entity models.Transfer
+	found, err := repo.db.
+		From(repo.table).
+		Where(goqu.Ex{
+			"from":   from,
+			"status": models.TransferStatusPending,
+		}).
+		Order(goqu.I("created_at").Desc()).
+		Limit(1).
+		ScanStruct(&entity)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	if !found {
+		return nil
+	}
+
+	return &entity
+}
