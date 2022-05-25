@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/mazanax/moneybot/config"
 	"math"
+	"strings"
 )
 
 func GetMinWithdrawAmount() float64 {
@@ -15,5 +16,15 @@ func GetMaxWithdrawAmount(balance int) float64 {
 }
 
 func DisplayAmount(balance int) string {
-	return fmt.Sprintf("%.5f", float64(balance)/1e5)
+	output := fmt.Sprintf("%.5f", float64(balance)/1e5)
+	if !strings.Contains(output, ".") {
+		return output
+	}
+
+	output = strings.TrimRight(output, "0")
+	if output[len(output)-1:] == "." {
+		output += "0"
+	}
+
+	return output
 }

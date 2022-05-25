@@ -57,10 +57,10 @@ func HandleTransfer(balanceManager *services.BalanceManager) HandlerFunc {
 
 		responseArticle := tg.NewInlineQueryResultArticleHTML(
 			update.InlineQuery.ID,
-			fmt.Sprintf("Send %.5f NEAR (balance: %s NEAR)", amount, utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
-			fmt.Sprintf("User %s sent <b>%.5f NEAR</b>.", strings.Join(fullName, " "), amount),
+			fmt.Sprintf("Send %s NEAR (balance: %s NEAR)", utils.DisplayAmount(int(amount*1e5)), utils.DisplayAmount(balanceManager.GetCurrentBalance(update.InlineQuery.From.ID))),
+			fmt.Sprintf("User %s sent <b>%s NEAR</b>.", strings.Join(fullName, " "), utils.DisplayAmount(int(amount*1e5))),
 		)
-		responseArticle.Description = fmt.Sprintf("The amount %.5f NEAR\n will be deducted from your balance NEAR. If you cancel this transfer you will get you money back.", amount)
+		responseArticle.Description = fmt.Sprintf("The amount %s NEAR\n will be deducted from your balance NEAR. If you cancel this transfer you will get you money back.", utils.DisplayAmount(int(amount*1e5)))
 
 		replyMarkup := pleaseWait()
 		responseArticle.ReplyMarkup = &replyMarkup
@@ -123,7 +123,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 				InlineMessageID: update.ChosenInlineResult.InlineMessageID,
 				ReplyMarkup:     &replyMarkup,
 			},
-			Text:      fmt.Sprintf("User %s sent <b>%.5f NEAR</b>.\n\n<i>Transfer ID: %s</i>", strings.Join(fullName, " "), amount, transfer.Slug),
+			Text:      fmt.Sprintf("User %s sent <b>%s NEAR</b>.\n\n<i>Transfer ID: %s</i>", strings.Join(fullName, " "), utils.DisplayAmount(int(amount*1e5)), transfer.Slug),
 			ParseMode: tg.ModeHTML,
 		}
 
