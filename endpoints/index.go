@@ -13,7 +13,10 @@ func IndexEndpoint() http.HandlerFunc {
 		}
 
 		writer.WriteHeader(200)
-		writer.Write(indexPage())
+		_, err := writer.Write(indexPage())
+		if err != nil {
+			return
+		}
 	}
 }
 
@@ -41,7 +44,7 @@ const indexTemplate = `
 
 		<p>
 			<video loop muted autoplay class="video">
-				<source src="https://textmoney.mznx.dev/demo.mp4?v4" type="video/mp4"/>
+				<source src="https://textmoney.mznx.dev/demo-near.mp4?v2" type="video/mp4"/>
             </video>
 		</p>
 
