@@ -31,7 +31,7 @@ func HandleSupport() HandlerFunc {
 func getSupportKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonURL("Frequently asked questions", "https://textmoney.mznx.dev/faq"),
+			tg.NewInlineKeyboardButtonURL("Frequently asked questions", "https://nearbot.im/faq"),
 		),
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonURL("Contact us", "https://t.me/textmoney_support"),

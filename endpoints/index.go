@@ -44,7 +44,7 @@ const indexTemplate = `
 
 		<p>
 			<video loop muted autoplay class="video">
-				<source src="https://textmoney.mznx.dev/demo-near.mp4?v2" type="video/mp4"/>
+				<source src="https://nearbot.im/demo-near.mp4?v2" type="video/mp4"/>
             </video>
 		</p>
 
