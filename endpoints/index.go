@@ -41,7 +41,7 @@ const indexTemplate = `
 
 		<p>
 			<video loop muted autoplay class="video">
-				<source src="https://textmoney.mznx.dev/demo.mp4?v4" type="video/mp4"/>
+				<source src="https://textmoney.mznx.dev/demo-near.mp4?v1" type="video/mp4"/>
             </video>
 		</p>
 
