@@ -14,7 +14,7 @@ func Welcome(balance int) string {
 }
 
 func Balance(balance int) string {
-	return "<b>TextMoney • NEAR</b>\n\n" +
+	return "<b>Send NEAR</b>\n\n" +
 		"This bot makes it possible to send NEAR to any Telegram user even they don't have NEAR wallet.\n\n" +
 		fmt.Sprintf("Current balance: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance)) +
 		fmt.Sprintf("<i>Updated: %s</i>", time.Now().Format("2006-01-02 3:04PM"))
@@ -137,7 +137,7 @@ func TransferRejected(amount uint64, transferID string) string {
 }
 
 func Support() string {
-	return "<b>TextMoney • Support</b>\n\n" +
+	return "<b>Send NEAR • Support</b>\n\n" +
 		"If you have a question or problem, please check Frequently Asked Questions or write to us\n\n" +
 		"<b>NOTE:</b> official support account is @textmoney_support. If the other account appears to be TextMoney Support, it's a scammer.\n\n" +
 		"Support <b>never</b> asks to transfer your NEAR to someone else."
