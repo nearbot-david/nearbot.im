@@ -85,7 +85,7 @@ func main() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
 		}
 
-		serverPort := os.Getenv("SERVER_HOST")
+		serverPort := os.Getenv("SERVER_PORT")
 		if serverPort == "" {
 			serverPort = "8444"
 		}
