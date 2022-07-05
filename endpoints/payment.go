@@ -129,20 +129,20 @@ const errorTemplate = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Something wrong &bull; @textmoneybot</title>
+    <title>Something wrong &bull; @sendnearbot</title>
     <style>
 		body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
 	</style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Error &bull; @textmoneybot</h1></header>
+    <header><h1>Error &bull; @sendnearbot</h1></header>
 
     <section>
         <p>There was an error while making this request. Please make sure you followed the correct link.</p>
 		<p>If the error repeats, we recommend contacting support.</p>
 
-		<a class="block" href="https://t.me/textmoneybot">Return to bot</a>
+		<a class="block" href="https://t.me/sendnearbot">Return to bot</a>
     </section>
 </div>
 </body>
@@ -154,14 +154,14 @@ const paymentSuccessfulTemplate = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Successful payment &bull; @textmoneybot</title>
+    <title>Successful payment &bull; @sendnearbot</title>
     <style>
         body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Successful payment &bull; @textmoneybot</h1></header>
+    <header><h1>Successful payment &bull; @sendnearbot</h1></header>
     <section>
         <p>Successful payment.</p>
 
@@ -169,7 +169,7 @@ const paymentSuccessfulTemplate = `
 
         <p>Usually it takes 1-2 minutes.</p>
 
-        <a class="block" href="https://t.me/textmoneybot">Return to bot</a>
+        <a class="block" href="https://t.me/sendnearbot">Return to bot</a>
     </section>
 </div>
 </body>
@@ -181,20 +181,20 @@ const paymentFailedTemplate = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Payment failed &bull; @textmoneybot</title>
+    <title>Payment failed &bull; @sendnearbot</title>
     <style>
         body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <header><h1>Payment failed &bull; @textmoneybot</h1></header>
+    <header><h1>Payment failed &bull; @sendnearbot</h1></header>
     <section>
         <p>Payment failed.</p>
 
         <p>Please return to bot and try again.</p>
 
-        <a class="block" href="https://t.me/textmoneybot">Return to bot</a>
+        <a class="block" href="https://t.me/sendnearbot">Return to bot</a>
     </section>
 </div>
 </body>

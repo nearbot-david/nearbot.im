@@ -357,7 +357,7 @@ func pleaseWait() tg.InlineKeyboardMarkup {
 func checkBalanceKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
-			tg.NewInlineKeyboardButtonURL("Show balance", "https://t.me/textmoneybot"),
+			tg.NewInlineKeyboardButtonURL("Show balance", "https://t.me/sendnearbot"),
 		),
 	)
 }

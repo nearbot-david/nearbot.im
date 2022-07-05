@@ -30,7 +30,7 @@ const faqTemplate = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FAQ &bull; @textmoneybot</title>
+    <title>FAQ &bull; @sendnearbot</title>
     <style>
         body,html{margin:0;padding:0;font-size:18px}.wrapper{width:100%;max-width:800px;margin:0 auto}header{background:#f0f8ff;padding:15px 30px;text-align:center;color:#000;text-shadow:1px 1px 2px #fff;margin:0}header h1{font-size:24px}section{padding:5px}section a{color:#888;text-decoration:none}section a:hover{border-bottom:1px dashed #888}section.logo{margin:5px auto;max-width:240px;width:100%}section.logo img{width:100%}section .block,section .mznx-payment-button{border:none!important;font-size:18px;margin:15px auto 0;padding:15px 30px;width:50%;background:#88bbf8;display:block;text-align:center;color:#fff;text-shadow:1px 1px 2px #888}section .block:hover,section .mznx-payment-button:hover{background:#5e84ad}.video{width:75%;max-width:450px;background:#fff;}
     </style>
@@ -58,7 +58,7 @@ const faqTemplate = `
 
         <h4 id="how-it-works">How it works?</h4>
         <p>It's easy: you top up bot balance from you NEAR wallet and then you can send your NEAR to anyone.</p>
-        <p>To do it you need to write @textmoneybot and amount of NEAR you're going to send in chat with user you want to send NEAR to.
+        <p>To do it you need to write @sendnearbot and amount of NEAR you're going to send in chat with user you want to send NEAR to.
             If you have enough NEAR on your balance you will see button.</p>
         <p style="text-align: center;">
             <video loop muted autoplay class="video">

@@ -85,7 +85,14 @@ func main() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
 		}
 
-		err = http.ListenAndServe(fmt.Sprintf(":%d", 8444), mux)
+		serverPort := os.Getenv("SERVER_HOST")
+		if serverPort == "" {
+			serverPort = "8444"
+		}
+
+		serverPortInt, _ := strconv.Atoi(serverPort)
+
+		err = http.ListenAndServe(fmt.Sprintf(":%d", serverPortInt), mux)
 		if err != nil {
 			fmt.Printf("Cannot start http server: %s\n", err)
 			os.Exit(2)
