@@ -119,10 +119,11 @@ func getBalanceKeyboard() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Balance", "show_balance"),
+			tg.NewInlineKeyboardButtonData("Address", "show_address"),
 		),
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("Top up", "deposit"),
-			tg.NewInlineKeyboardButtonData("Withdraw", "withdraw"),
+			tg.NewInlineKeyboardButtonData("Transfer", "withdraw"),
 		),
 		tg.NewInlineKeyboardRow(
 			tg.NewInlineKeyboardButtonData("History", "history"),

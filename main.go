@@ -23,6 +23,10 @@ func isDebug() bool {
 	return os.Getenv("DEBUG") == "1"
 }
 
+func shouldRunCron() bool {
+	return os.Getenv("NO_CRON") != "1"
+}
+
 func getDb() *goqu.Database {
 	dbURI := os.Getenv("DB_URI")
 	if dbURI == "" {
@@ -52,6 +56,7 @@ func main() {
 	stateRepository := repository.NewStateRepository(db)
 	withdrawalRepository := repository.NewWithdrawalRepository(db)
 	historyRepository := repository.NewHistoryRepository(db)
+	transactionRepository := repository.NewTransactionRepository(db)
 
 	addressManager := services.NewAddressManager(balanceRepository)
 	historyManager := services.NewHistoryManager(historyRepository)
@@ -66,6 +71,7 @@ func main() {
 		os.Getenv("PAYMENT_SUCCESS_ENDPOINT"),
 		depositRepository,
 	)
+	transactionChecker := services.NewTransactionChecker(db, balanceRepository, transactionRepository)
 
 	bot.Debug = isDebug()
 	log.Printf("Authorized on account %s", bot.Self.UserName)
@@ -73,6 +79,12 @@ func main() {
 	u := tg.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
+
+	if shouldRunCron() {
+		go func(bot *tg.BotAPI) {
+			transactionChecker.Run(bot)
+		}(bot)
+	}
 
 	go func() {
 		mux := http.NewServeMux()

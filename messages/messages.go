@@ -13,6 +13,14 @@ func Welcome(balance int) string {
 		fmt.Sprintf("Current balance: <b>%s NEAR</b>", utils.DisplayAmount(balance))
 }
 
+func IncomingTransfer(deposit int, address string, balance int, hash string) string {
+	return "<b>NEAR added.</b>\n\n" +
+		fmt.Sprintf("You received <b>%s NEAR</b> from <b>%s</b> via on-chain transfer.\n\n", utils.DisplayAmount(deposit), address) +
+		fmt.Sprintf("Current balance: <b>%s NEAR</b>\n\n", utils.DisplayAmount(balance)) +
+		fmt.Sprintf("<i>Updated: %s</i>\n\n", time.Now().Format("2006-01-02 3:04PM")) +
+		fmt.Sprintf("<i>tx hash: %s</i>", hash)
+}
+
 func Balance(balance int) string {
 	return "<b>Send NEAR</b>\n\n" +
 		"This bot makes it possible to send NEAR to any Telegram user even they don't have NEAR wallet.\n\n" +
@@ -73,7 +81,8 @@ func WithdrawIncorrectAmount(balance int) string {
 
 func WithdrawConfirmAmount(amount int, balance int) string {
 	return "<b>Transfer NEAR</b>\n\n" +
-		fmt.Sprintf("You are going to transfer <b>%s NEAR</b>. Please send us the address of the wallet to which you want to send the NEAR.\n", utils.DisplayAmount(amount)) +
+		fmt.Sprintf("You are going to transfer <b>%s NEAR</b>.\n\n", utils.DisplayAmount(amount)) +
+		"Please send us the address of the wallet to which you want to send the NEAR.\n" +
 		fmt.Sprintf("For example: textmoneybot.near\n\n") +
 		fmt.Sprintf("<b>Fee:</b> %s NEAR\n", utils.DisplayAmount(int(float64(amount)*config.Fee))) +
 		fmt.Sprintf("<b>%s NEAR</b> will be deducted from your balance (fee inc.)\n\n", utils.DisplayAmount(int(float64(amount)*(1+config.Fee)))) +

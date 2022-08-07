@@ -9,9 +9,5 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.4
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-)
-
-require (
-	github.com/btcsuite/btcd v0.20.1-beta // indirect
-	golang.org/x/crypto v0.0.0-20200115085410-6d4e4cb37c7d // indirect
+	oya.to/namedlocker v1.0.0
 )
