@@ -3,6 +3,7 @@ package endpoints
 import (
 	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/mazanax/moneybot/config"
 	"github.com/mazanax/moneybot/messages"
 	"github.com/mazanax/moneybot/services"
 	"github.com/mazanax/moneybot/utils"
@@ -15,12 +16,13 @@ func PaymentEndpoint(
 	paymentMethod services.PaymentMethod,
 	balanceManager *services.BalanceManager,
 	historyManager *services.HistoryManager,
+	addressManager *services.AddressManager,
 	bot *tg.BotAPI,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		switch request.Method {
 		case http.MethodPost:
-			handlePost(paymentMethod, balanceManager, historyManager, bot)(writer, request)
+			handlePost(paymentMethod, balanceManager, historyManager, addressManager, bot)(writer, request)
 		default:
 			writer.WriteHeader(http.StatusMethodNotAllowed)
 			writer.Write(errorPage())
@@ -46,13 +48,20 @@ func handlePost(
 	paymentMethod services.PaymentMethod,
 	balanceManager *services.BalanceManager,
 	historyManager *services.HistoryManager,
+	addressManager *services.AddressManager,
 	bot *tg.BotAPI,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		deposit, err := paymentMethod.ProcessPayment(request)
 		if err == nil {
+			addr, _ := balanceManager.GetAddressBalance(deposit.TelegramID) // just to be sure that user already has address
+
 			balanceManager.Increment(deposit.TelegramID, deposit.Amount)
 			historyManager.CreateDeposit(deposit)
+
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			go addressManager.Transfer(config.NearWallet, addr, deposit.Amount, wg)
 
 			if deposit.MessageID != 0 {
 				paymentLink := paymentMethod.BuildPaymentLink(services.PaymentID(deposit.Slug))
@@ -69,9 +78,7 @@ func handlePost(
 			bot.Send(message)
 			writer.Write([]byte(""))
 
-			wg := &sync.WaitGroup{}
 			wg.Add(1)
-
 			go func() {
 				time.Sleep(time.Second / 2)
 

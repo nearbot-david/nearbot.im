@@ -241,6 +241,7 @@ func HandleWithdrawConfirm(
 	stateManager *services.StateManager,
 	withdrawalManager *services.WithdrawalManager,
 	historyManager *services.HistoryManager,
+	addressManager *services.AddressManager,
 ) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		callback := tg.NewCallback(update.CallbackQuery.ID, "")
@@ -249,7 +250,10 @@ func HandleWithdrawConfirm(
 			return
 		}
 
-		balance := balanceManager.GetCurrentBalance(update.CallbackQuery.From.ID)
+		address, balance := balanceManager.GetAddressBalance(update.CallbackQuery.From.ID)
+		if address == "" {
+			address = config.NearWallet
+		}
 		draft := withdrawalManager.GetDraft(update.CallbackQuery.From.ID)
 		if draft == nil || int(draft.Amount) > balance || float64(draft.Amount)/1e5 < utils.GetMinWithdrawAmount() || float64(draft.Amount)/1e5 > utils.GetMaxWithdrawAmount(balance) {
 			response := tg.NewMessage(
@@ -276,7 +280,9 @@ func HandleWithdrawConfirm(
 		}
 		wg := &sync.WaitGroup{}
 		wg.Add(1)
-		go utils.Withdraw(draft.Address, draft.Amount, wg)
+		go addressManager.Transfer(address, draft.Address, draft.Amount, wg)
+		wg.Add(1)
+		go addressManager.Transfer(address, config.NearWallet, uint64(float64(draft.Amount)*config.Fee), wg)
 
 		stateManager.SetState(update.CallbackQuery.From.ID, models.UserStateIdle, 0)
 		balanceManager.Decrement(update.CallbackQuery.From.ID, uint64(float64(draft.Amount)*(1+config.Fee)))

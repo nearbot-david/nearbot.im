@@ -53,10 +53,11 @@ func main() {
 	withdrawalRepository := repository.NewWithdrawalRepository(db)
 	historyRepository := repository.NewHistoryRepository(db)
 
+	addressManager := services.NewAddressManager(balanceRepository)
 	historyManager := services.NewHistoryManager(historyRepository)
 	withdrawalManager := services.NewWithdrawalManager(withdrawalRepository)
 	stateManager := services.NewStateManager(stateRepository)
-	balanceManager := services.NewBalanceManager(balanceRepository, transferRepository)
+	balanceManager := services.NewBalanceManager(balanceRepository, transferRepository, addressManager)
 	paymentMethod := services.NewPaywithnearMethod(
 		os.Getenv("PAYMENT_ENDPOINT"),
 		os.Getenv("PWN_CLIENT_ID"),
@@ -77,10 +78,11 @@ func main() {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", endpoints.IndexEndpoint())
 		mux.HandleFunc("/faq", endpoints.FaqEndpoint())
-		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, balanceManager, historyManager, bot))
+		mux.HandleFunc("/payment/", endpoints.PaymentEndpoint(paymentMethod, balanceManager, historyManager, addressManager, bot))
 		mux.HandleFunc("/payment-successful", endpoints.PaymentSuccessfulEndpoint())
 		mux.HandleFunc("/payment-success", endpoints.PaymentSuccessfulEndpoint())
 		mux.HandleFunc("/payment-failed", endpoints.PaymentFailedEndpoint())
+		mux.HandleFunc("/address/", endpoints.QrCodeEndpoint())
 		if isDebug() {
 			mux.HandleFunc("/emulator/", endpoints.EmulatorEndpoint(depositRepository, os.Getenv("GATEWAY_SECRET_KEY")))
 		}
@@ -139,6 +141,8 @@ func main() {
 					handlers.HandleCancel(balanceManager, stateManager)(bot, &update)
 				case update.CallbackData() == "show_balance":
 					handlers.HandleBalance(balanceManager)(bot, &update)
+				case update.CallbackData() == "show_address":
+					handlers.HandleAddress(balanceManager)(bot, &update)
 				case update.CallbackData() == "history":
 					handlers.HandleHistory()(bot, &update)
 				case update.CallbackData() == "deposit":
@@ -146,7 +150,7 @@ func main() {
 				case update.CallbackData() == "withdraw":
 					handlers.HandleWithdraw(balanceManager, stateManager, withdrawalManager)(bot, &update)
 				case update.CallbackData() == "withdraw_confirm":
-					handlers.HandleWithdrawConfirm(balanceManager, stateManager, withdrawalManager, historyManager)(bot, &update)
+					handlers.HandleWithdrawConfirm(balanceManager, stateManager, withdrawalManager, historyManager, addressManager)(bot, &update)
 				case strings.HasPrefix(update.CallbackData(), "deposit_"):
 					amountString := strings.TrimPrefix(update.CallbackData(), "deposit_")
 					amount, _ := strconv.Atoi(amountString)
@@ -155,7 +159,7 @@ func main() {
 				case strings.HasPrefix(update.CallbackData(), "transfer_approve_"):
 					transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_approve_")
 
-					handlers.HandleTransferApprove(balanceManager, transferRepository, transferSlug, historyManager)(bot, &update)
+					handlers.HandleTransferApprove(balanceManager, transferRepository, transferSlug, historyManager, addressManager)(bot, &update)
 				case strings.HasPrefix(update.CallbackData(), "transfer_reject_"):
 					transferSlug := strings.TrimPrefix(update.CallbackData(), "transfer_reject_")
 

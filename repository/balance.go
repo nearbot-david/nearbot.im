@@ -96,3 +96,21 @@ func (repo *BalanceRepository) FindByTelegramID(telegramID int64) *models.Balanc
 
 	return &entity
 }
+
+func (repo *BalanceRepository) FindByAddress(address string) *models.Balance {
+	var entity models.Balance
+	found, err := repo.db.
+		From(repo.table).
+		Where(goqu.C("near_address").Eq(address)).
+		ScanStruct(&entity)
+
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	if !found {
+		return nil
+	}
+
+	return &entity
+}

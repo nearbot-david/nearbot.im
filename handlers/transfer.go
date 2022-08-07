@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/mazanax/moneybot/config"
 	"github.com/mazanax/moneybot/messages"
 	"github.com/mazanax/moneybot/models"
 	"github.com/mazanax/moneybot/repository"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -133,7 +135,7 @@ func HandleTransferSent(balanceManager *services.BalanceManager, historyManager 
 	}
 }
 
-func HandleTransferApprove(balanceManager *services.BalanceManager, repository *repository.TransferRepository, slug string, historyManager *services.HistoryManager) HandlerFunc {
+func HandleTransferApprove(balanceManager *services.BalanceManager, repository *repository.TransferRepository, slug string, historyManager *services.HistoryManager, addressManager *services.AddressManager) HandlerFunc {
 	return func(bot *tg.BotAPI, update *tg.Update) {
 		transfer := repository.FindBySlug(slug)
 		if transfer == nil {
@@ -168,8 +170,17 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 			return
 		}
 
-		balanceManager.GetCurrentBalance(update.CallbackQuery.From.ID) // create user balance entity
+		fromAddr, _ := balanceManager.GetAddressBalance(transfer.From)
+		if fromAddr == "" {
+			fromAddr = config.NearWallet
+		}
+		toAddr, _ := balanceManager.GetAddressBalance(update.CallbackQuery.From.ID) // create user balance entity
 		balanceManager.Increment(update.CallbackQuery.From.ID, transfer.Amount)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go addressManager.Transfer(fromAddr, toAddr, transfer.Amount, wg)
+
 		transfer.To = update.CallbackQuery.From.ID
 		transfer.Status = models.TransferStatusAccepted
 		if err := repository.Persist(transfer); err != nil {
@@ -206,6 +217,7 @@ func HandleTransferApprove(balanceManager *services.BalanceManager, repository *
 		if _, err := bot.Request(response); err != nil && !strings.Contains(err.Error(), "message content and reply markup are exactly the same") {
 			log.Println(err)
 		}
+		wg.Wait()
 	}
 }
 
