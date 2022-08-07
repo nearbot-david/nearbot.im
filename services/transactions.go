@@ -53,7 +53,7 @@ func (tc *TransactionChecker) Run(bot *tg.BotAPI) {
 	for {
 		wg := &sync.WaitGroup{}
 		func(wg *sync.WaitGroup) {
-			defer time.Sleep(1 * time.Minute)
+			defer time.Sleep(30 * time.Second)
 
 			scanner, err := tc.db.From("balance").Select("near_address").Where(goqu.C("near_address").Neq("")).Executor().Scanner()
 			if err != nil {
