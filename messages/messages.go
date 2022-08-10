@@ -2,8 +2,8 @@ package messages
 
 import (
 	"fmt"
-	"github.com/mazanax/moneybot/config"
-	"github.com/mazanax/moneybot/utils"
+	"github.com/Pay-With-NEAR/nearbot.im/config"
+	"github.com/Pay-With-NEAR/nearbot.im/utils"
 	"time"
 )
 

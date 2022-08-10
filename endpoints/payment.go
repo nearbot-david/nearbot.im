@@ -2,11 +2,11 @@ package endpoints
 
 import (
 	"fmt"
+	"github.com/Pay-With-NEAR/nearbot.im/config"
+	"github.com/Pay-With-NEAR/nearbot.im/messages"
+	"github.com/Pay-With-NEAR/nearbot.im/services"
+	"github.com/Pay-With-NEAR/nearbot.im/utils"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/mazanax/moneybot/config"
-	"github.com/mazanax/moneybot/messages"
-	"github.com/mazanax/moneybot/services"
-	"github.com/mazanax/moneybot/utils"
 	"net/http"
 	"sync"
 	"time"

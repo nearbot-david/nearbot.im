@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"github.com/Pay-With-NEAR/nearbot.im/models"
 	"github.com/doug-martin/goqu/v9"
-	"github.com/mazanax/moneybot/models"
 	"log"
 	"time"
 )

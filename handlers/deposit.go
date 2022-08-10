@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/Pay-With-NEAR/nearbot.im/messages"
+	"github.com/Pay-With-NEAR/nearbot.im/repository"
+	"github.com/Pay-With-NEAR/nearbot.im/services"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/mazanax/moneybot/messages"
-	"github.com/mazanax/moneybot/repository"
-	"github.com/mazanax/moneybot/services"
 	"log"
 	"strings"
 )

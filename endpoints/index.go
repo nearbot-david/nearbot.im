@@ -1,7 +1,7 @@
 package endpoints
 
 import (
-	"github.com/mazanax/moneybot/utils"
+	"github.com/Pay-With-NEAR/nearbot.im/utils"
 	"net/http"
 )
 

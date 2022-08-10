@@ -1,10 +1,10 @@
 package services
 
 import (
-	"github.com/mazanax/moneybot/config"
-	"github.com/mazanax/moneybot/models"
-	"github.com/mazanax/moneybot/repository"
-	"github.com/mazanax/moneybot/utils"
+	"github.com/Pay-With-NEAR/nearbot.im/config"
+	"github.com/Pay-With-NEAR/nearbot.im/models"
+	"github.com/Pay-With-NEAR/nearbot.im/repository"
+	"github.com/Pay-With-NEAR/nearbot.im/utils"
 	"log"
 	"sync"
 	"time"

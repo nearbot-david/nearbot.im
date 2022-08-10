@@ -1,4 +1,4 @@
-module github.com/mazanax/moneybot
+module github.com/Pay-With-NEAR/nearbot.im
 
 go 1.17
 

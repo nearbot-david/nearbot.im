@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/mazanax/moneybot/models"
-	"github.com/mazanax/moneybot/repository"
+	"github.com/Pay-With-NEAR/nearbot.im/models"
+	"github.com/Pay-With-NEAR/nearbot.im/repository"
 	"log"
 )
 

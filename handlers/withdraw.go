@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"github.com/Pay-With-NEAR/nearbot.im/config"
+	"github.com/Pay-With-NEAR/nearbot.im/messages"
+	"github.com/Pay-With-NEAR/nearbot.im/models"
+	"github.com/Pay-With-NEAR/nearbot.im/services"
+	"github.com/Pay-With-NEAR/nearbot.im/utils"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/mazanax/moneybot/config"
-	"github.com/mazanax/moneybot/messages"
-	"github.com/mazanax/moneybot/models"
-	"github.com/mazanax/moneybot/services"
-	"github.com/mazanax/moneybot/utils"
 	"log"
 	"strconv"
 	"strings"

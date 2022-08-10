@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/mazanax/moneybot/config"
+	"github.com/Pay-With-NEAR/nearbot.im/config"
 	"os/exec"
 	"sync"
 )

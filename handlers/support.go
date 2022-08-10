@@ -1,8 +1,8 @@
 package handlers
 
 import (
+	"github.com/Pay-With-NEAR/nearbot.im/messages"
 	tg "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/mazanax/moneybot/messages"
 	"log"
 	"strings"
 )
